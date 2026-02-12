@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EptaGram</title>
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 1200px;
+            height: 800px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            display: flex;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-profile {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .user-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 5px;
+        }
+
+        .logout-btn {
+            color: #dc3545;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .channels {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .channel {
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+        }
+
+        .channel:hover {
+            background: #e9ecef;
+        }
+
+        .channel.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .channel-icon {
+            margin-right: 10px;
+            font-size: 20px;
+        }
+
+        .online-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .online { background: #28a745; }
+        .offline { background: #dc3545; }
+
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #764ba2;
+            display: flex;
+            align-items: center;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-own {
+            align-items: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .message-own .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message-sender {
+            font-weight: bold;
+            color: #764ba2;
+            margin-bottom: 5px;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 5px;
+            text-align: right;
+        }
+
+        .message-own .message-time {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .typing-indicator {
+            padding: 10px 20px;
+            color: #6c757d;
+            font-style: italic;
+            font-size: 14px;
+        }
+
+        .message-input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 15px;
+            transition: 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #764ba2;
+            outline: none;
+        }
+
+        .send-btn {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .notification-badge {
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+
+        .private-badge {
+            background: #ffc107;
+            color: #000;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="sidebar">
+            <div class="user-profile">
+                <div class="user-name">{{ username }}</div>
+                <a href="/logout" class="logout-btn">Выйти</a>
+            </div>
+
+            <div class="channels" id="channels">
+                <div class="channel active" onclick="switchChannel('general')">
+                    <span class="channel-icon">💬</span>
+                    Общий чат
+                </div>
+
+                <div style="margin-top: 20px; margin-bottom: 10px; color: #6c757d; font-size: 12px; padding-left: 15px;">
+                    ЛИЧНЫЕ СООБЩЕНИЯ
+                </div>
+
+                <div id="usersList">
+                    {% for user in users %}
+                    <div class="channel" id="user-{{ user }}" onclick="switchChannel('{{ user }}')">
+                        <span class="online-status offline" id="status-{{ user }}"></span>
+                        {{ user }}
+                        <span class="notification-badge" id="notify-{{ user }}" style="display: none;"></span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="main-chat">
+            <div class="chat-header" id="chatHeader">
+                Общий чат
+            </div>
+
+            <div class="chat-messages" id="chatMessages"></div>
+
+            <div class="typing-indicator" id="typingIndicator" style="display: none;"></div>
+
+            <div class="message-input-area">
+                <input type="text" class="message-input" id="messageInput"
+                       placeholder="Сообщение..." autocomplete="off">
+                <button class="send-btn" onclick="sendMessage()">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const username = '{{ username }}';
+        let currentChannel = 'general';
+        let currentUser = null;
+        let typingTimeout = null;
+        let unreadMessages = {};
+
+        fetch('/api/messages')
+            .then(res => res.json())
+            .then(messages => {
+                messages.forEach(msg => displayMessage(msg));
+            });
+
+        fetch('/api/unread')
+            .then(res => res.json())
+            .then(unread => {
+                unreadMessages = unread;
+                for (let [user, count] of Object.entries(unread)) {
+                    const badge = document.getElementById(`notify-${user}`);
+                    if (badge) {
+                        badge.style.display = 'inline';
+                        badge.textContent = count;
+                    }
+                }
+            });
+
+        function switchChannel(channel) {
+            document.querySelectorAll('.channel').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            if (channel === 'general') {
+                document.getElementById('chatHeader').innerHTML = 'Общий чат';
+                currentChannel = 'general';
+                currentUser = null;
+
+                document.getElementById('chatMessages').innerHTML = '';
+                fetch('/api/messages')
+                    .then(res => res.json())
+                    .then(messages => {
+                        messages.forEach(msg => displayMessage(msg));
+                    });
+            } else {
+                document.getElementById('chatHeader').innerHTML = `Личный чат с ${channel}`;
+                currentChannel = 'private';
+                currentUser = channel;
+                document.getElementById(`user-${channel}`).classList.add('active');
+
+                const badge = document.getElementById(`notify-${channel}`);
+                if (badge) badge.style.display = 'none';
+
+                document.getElementById('chatMessages').innerHTML = '';
+                fetch(`/api/private/${channel}`)
+                    .then(res => res.json())
+                    .then(messages => {
+                        messages.forEach(msg => displayPrivateMessage(msg));
+                    });
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            if (currentChannel === 'general') {
+                socket.emit('send_message', { text: text });
+                displayMessage({
+                    from: username,
+                    text: text,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    date: new Date().toLocaleDateString()
+                });
+            } else {
+                socket.emit('send_private', {
+                    to: currentUser,
+                    text: text
+                });
+                displayPrivateMessage({
+                    from: username,
+                    to: currentUser,
+                    text: text,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                });
+            }
+
+            input.value = '';
+        }
+
+        function displayMessage(msg) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
+
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
+                    <div>${escapeHtml(msg.text)}</div>
+                    <div class="message-time">${msg.time}</div>
+                </div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function displayPrivateMessage(msg) {
+            if (currentUser === msg.from || currentUser === msg.to) {
+                const messagesDiv = document.getElementById('chatMessages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
+
+                messageDiv.innerHTML = `
+                    <div class="message-content">
+                        ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
+                        <div>${escapeHtml(msg.text)}</div>
+                        <div class="message-time">${msg.time}</div>
+                    </div>
+                `;
+
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }
+        }
+
+        socket.on('users_update', function(users) {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+
+            users.forEach(user => {
+                if (user.username !== username) {
+                    const div = document.createElement('div');
+                    div.className = 'channel';
+                    div.id = `user-${user.username}`;
+                    div.onclick = () => switchChannel(user.username);
+                    div.innerHTML = `
+                        <span class="online-status ${user.online ? 'online' : 'offline'}"
+                              id="status-${user.username}"></span>
+                        ${user.username}
+                        <span class="notification-badge" id="notify-${user.username}"
+                              style="display: ${unreadMessages[user.username] ? 'inline' : 'none'};">
+                            ${unreadMessages[user.username] || ''}
+                        </span>
+                    `;
+                    usersList.appendChild(div);
+                }
+            });
+        });
+
+        socket.on('new_message', function(msg) {
+            if (currentChannel === 'general') {
+                displayMessage(msg);
+            }
+        });
+
+        socket.on('new_private', function(msg) {
+            displayPrivateMessage(msg);
+
+            if (currentUser !== msg.from && msg.from !== username) {
+                fetch('/api/unread')
+                    .then(res => res.json())
+                    .then(unread => {
+                        unreadMessages = unread;
+                        const badge = document.getElementById(`notify-${msg.from}`);
+                        if (badge && unread[msg.from]) {
+                            badge.style.display = 'inline';
+                            badge.textContent = unread[msg.from];
+                        }
+                    });
+            }
+        });
+
+        socket.on('unread_update', function(unread) {
+            unreadMessages = unread;
+            for (let [user, count] of Object.entries(unread)) {
+                const badge = document.getElementById(`notify-${user}`);
+                if (badge) {
+                    badge.style.display = 'inline';
+                    badge.textContent = count;
+                }
+            }
+        });
+
+        socket.on('user_online', function(data) {
+            const statusEl = document.getElementById(`status-${data.username}`);
+            if (statusEl) statusEl.className = 'online-status online';
+        });
+
+        socket.on('user_offline', function(data) {
+            const statusEl = document.getElementById(`status-${data.username}`);
+            if (statusEl) statusEl.className = 'online-status offline';
+        });
+
+        socket.on('user_typing', function(data) {
+            if (currentChannel === 'general' && data.username !== username) {
+                const indicator = document.getElementById('typingIndicator');
+                indicator.style.display = 'block';
+                indicator.innerHTML = `${data.username} печатает...`;
+
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 1500);
+            }
+        });
+
+        socket.on('user_typing_private', function(data) {
+            if (currentUser === data.username) {
+                const indicator = document.getElementById('typingIndicator');
+                indicator.style.display = 'block';
+                indicator.innerHTML = `${data.username} печатает...`;
+
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    indicator.style.display = 'none';
+                }, 1500);
+            }
+        });
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('messageInput').addEventListener('input', function() {
+            clearTimeout(typingTimeout);
+
+            if (currentChannel === 'general') {
+                socket.emit('typing', { to: 'general', is_typing: true });
+            } else {
+                socket.emit('typing', { to: currentUser, is_typing: true });
+            }
+
+            typingTimeout = setTimeout(() => {
+                if (currentChannel === 'general') {
+                    socket.emit('typing', { to: 'general', is_typing: false });
+                } else {
+                    socket.emit('typing', { to: currentUser, is_typing: false });
+                }
+            }, 1000);
+        });
+
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
