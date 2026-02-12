@@ -1,16 +1,17 @@
 from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 from flask_socketio import SocketIO, emit
-import eventlet
+import gevent
+from gevent import monkey
 import os
 from datetime import datetime
 import json
 import database as db
 
-eventlet.monkey_patch()
+monkey.patch_all()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'eptagram_secret_key_2024'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet', logger=False, engineio_logger=False)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent', logger=False, engineio_logger=False)
 
 # Хранилище socket.id
 user_sockets = {}
