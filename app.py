@@ -107,7 +107,7 @@ def register():
         print(f"❌ Ошибка при создании {username}")
         return 'Ошибка при регистрации! <a href="/register">Попробовать снова</a>'
 
-# ============ ВЫХОД (ИСПРАВЛЕНО) ============
+# ============ ВЫХОД ============
 @app.route('/logout')
 def logout():
     username = session.pop('username', None)
@@ -115,11 +115,10 @@ def logout():
         db.set_user_online(username, False)
         if username in user_sockets:
             del user_sockets[username]
-        # ✅ БЕЗ broadcast=True!
         socketio.emit('user_offline', {'username': username})
     return redirect(url_for('index'))
 
-# ============ API ДЛЯ АВАТАРОВ (ИСПРАВЛЕНО) ============
+# ============ API ДЛЯ АВАТАРОВ ============
 @app.route('/api/avatar', methods=['POST'])
 def update_avatar():
     if 'username' not in session:
@@ -129,7 +128,6 @@ def update_avatar():
     avatar = data.get('avatar')
     
     if db.update_avatar(session['username'], avatar):
-        # ✅ БЕЗ broadcast=True!
         socketio.emit('avatar_update', {
             'username': session['username'],
             'avatar': avatar
@@ -143,11 +141,30 @@ def get_avatar(username):
     avatar = db.get_avatar(username)
     return jsonify({'avatar': avatar})
 
+# ============ API ДЛЯ ФОНА ============
+@app.route('/api/bg-image', methods=['POST'])
+def update_bg_image():
+    if 'username' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
+    
+    data = request.json
+    image = data.get('image')
+    
+    if db.update_bg_image(session['username'], image):
+        return jsonify({'success': True})
+    
+    return jsonify({'error': 'Failed to update background image'}), 400
+
+@app.route('/api/bg-image/<username>')
+def get_bg_image(username):
+    image = db.get_bg_image(username)
+    return jsonify({'image': image})
+
 # ============ API ДЛЯ СООБЩЕНИЙ ============
 @app.route('/api/messages')
 def get_messages():
     offset = request.args.get('offset', 0, type=int)
-    limit = request.args.get('limit', 20, type=int)
+    limit = request.args.get('limit', 50, type=int)
     return jsonify(db.get_general_messages(limit, offset))
 
 @app.route('/api/private/<string:user>')
@@ -157,7 +174,7 @@ def get_private_messages(user):
         return jsonify([])
     
     offset = request.args.get('offset', 0, type=int)
-    limit = request.args.get('limit', 20, type=int)
+    limit = request.args.get('limit', 50, type=int)
     
     db.mark_private_as_read(user, current_user)
     messages = db.get_private_messages(current_user, user, limit, offset)
@@ -179,7 +196,6 @@ def handle_connect(auth=None):
         db.set_user_online(username, True)
         user_sockets[username] = request.sid
         all_users = db.get_all_users()
-        # ✅ ВНУТРИ ОБРАБОТЧИКА - МОЖНО broadcast!
         emit('users_update', all_users, broadcast=True)
         print(f'{username} подключился')
         return True
@@ -194,7 +210,6 @@ def handle_disconnect():
         db.set_user_online(username, False)
         if username in user_sockets:
             del user_sockets[username]
-        # ✅ ВНУТРИ ОБРАБОТЧИКА - МОЖНО broadcast!
         emit('user_offline', {'username': username}, broadcast=True)
         print(f'{username} отключился')
 
@@ -206,7 +221,6 @@ def handle_message(data):
     print(f"📤 Получено сообщение от {username}: {data['text'][:30]}...")
     msg = db.save_general_message(username, data['text'])
     if msg:
-        # ✅ ВНУТРИ ОБРАБОТЧИКА - МОЖНО broadcast!
         emit('new_message', msg, broadcast=True)
         print(f"📢 Сообщение разослано всем")
 
@@ -222,15 +236,12 @@ def handle_private(data):
     
     if msg:
         if to_user in user_sockets:
-            # ✅ ВНУТРИ ОБРАБОТЧИКА
             emit('new_private', msg, room=user_sockets[to_user])
         
-        # ✅ ВНУТРИ ОБРАБОТЧИКА
         emit('new_private', msg, room=request.sid)
         
         if to_user in user_sockets:
             unread = db.get_unread_count(to_user)
-            # ✅ ВНУТРИ ОБРАБОТЧИКА
             emit('unread_update', unread, room=user_sockets[to_user])
 
 @socketio.on('typing')
@@ -240,55 +251,16 @@ def handle_typing(data):
         return
 
     if data['to'] == 'general':
-        # ✅ ВНУТРИ ОБРАБОТЧИКА - МОЖНО broadcast!
         emit('user_typing', {
             'username': username,
             'is_typing': data['is_typing']
         }, broadcast=True, include_self=False)
     else:
         if data['to'] in user_sockets:
-            # ✅ ВНУТРИ ОБРАБОТЧИКА
             emit('user_typing_private', {
                 'username': username,
                 'is_typing': data['is_typing']
             }, room=user_sockets[data['to']])
-# ============ API ДЛЯ ФОНОВЫХ КАРТИНОК ============
-@app.route('/api/bg-image', methods=['POST'])
-def update_bg_image():
-    if 'username' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-    
-    data = request.json
-    image = data.get('image')
-    
-    if db.update_bg_image(session['username'], image):
-        return jsonify({'success': True})
-    
-    return jsonify({'error': 'Failed to update background image'}), 400
-
-@app.route('/api/bg-image/<username>')
-def get_bg_image(username):
-    image = db.get_bg_image(username)
-    return jsonify({'image': image})
-
-# ============ API ДЛЯ НЕПРОЗРАЧНОСТИ ============
-@app.route('/api/bg-opacity', methods=['POST'])
-def update_bg_opacity():
-    if 'username' not in session:
-        return jsonify({'error': 'Not logged in'}), 401
-    
-    data = request.json
-    opacity = data.get('opacity', 30)
-    
-    if db.update_bg_opacity(session['username'], opacity):
-        return jsonify({'success': True})
-    
-    return jsonify({'error': 'Failed to update opacity'}), 400
-
-@app.route('/api/bg-opacity/<username>')
-def get_bg_opacity(username):
-    opacity = db.get_bg_opacity(username)
-    return jsonify({'opacity': opacity})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
