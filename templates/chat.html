@@ -600,7 +600,40 @@
         </div>
     </div>
         <script>
-           
+            // ============ ЗАГРУЗКА ИСТОРИИ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ============
+window.addEventListener('load', function() {
+    console.log('🔄 Загружаю историю сообщений...');
+    
+    fetch('/api/messages')
+        .then(res => res.json())
+        .then(messages => {
+            console.log('📥 Загружено сообщений:', messages.length);
+            
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = ''; // Очищаем
+            
+            messages.reverse().forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+                
+                let senderHtml = '';
+                if (msg.from !== username) {
+                    senderHtml = `<div class="message-sender">${msg.from}</div>`;
+                }
+                
+                messageDiv.innerHTML = `
+                    ${senderHtml}
+                    <div class="message-bubble">${msg.text}</div>
+                    <div class="message-time">${msg.time}</div>
+                `;
+                
+                container.appendChild(messageDiv);
+            });
+            
+            container.scrollTop = container.scrollHeight;
+        })
+        .catch(err => console.error('❌ Ошибка загрузки истории:', err));
+});
         const socket = io();
         const username = '{{ username }}';
         let currentChannel = 'general';
