@@ -23,6 +23,7 @@ def init_db():
                 avatar TEXT,
                 bg_image TEXT,
                 bg_pattern TEXT DEFAULT 'default',
+                bg_opacity INTEGER DEFAULT 30,
                 online INTEGER DEFAULT 0,
                 last_seen TEXT,
                 registered TEXT
@@ -211,6 +212,32 @@ def get_bg_pattern(username):
         print(f"❌ Ошибка получения паттерна: {e}")
         return 'default'
 
+def update_bg_opacity(username, opacity):
+    """Сохраняет значение непрозрачности"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('UPDATE users SET bg_opacity = %s WHERE username = %s', (opacity, username))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка сохранения непрозрачности: {e}")
+        return False
+
+def get_bg_opacity(username):
+    """Получает значение непрозрачности"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT bg_opacity FROM users WHERE username = %s', (username,))
+        result = cur.fetchone()
+        conn.close()
+        return result['bg_opacity'] if result else 30
+    except Exception as e:
+        print(f"❌ Ошибка получения непрозрачности: {e}")
+        return 30
+
 def set_user_online(username, online=True):
     try:
         conn = get_db()
@@ -275,7 +302,6 @@ def get_general_messages(limit=50, offset=0):
     try:
         conn = get_db()
         cur = conn.cursor()
-        # ВАЖНО: ORDER BY id DESC для получения последних сообщений первыми
         cur.execute(
             'SELECT id, username, text, time, date FROM general_messages ORDER BY id DESC LIMIT %s OFFSET %s',
             (limit, offset)
@@ -284,7 +310,7 @@ def get_general_messages(limit=50, offset=0):
         conn.close()
         
         messages = []
-        for row in reversed(rows):  # Переворачиваем для правильного порядка
+        for row in reversed(rows):
             messages.append({
                 'id': row['id'],
                 'from': row['username'],
