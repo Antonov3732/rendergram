@@ -168,15 +168,17 @@ def get_unread():
     return jsonify(db.get_unread_count(current_user))
 
 # ============ SOCKET.IO СОБЫТИЯ ============
+
 @socketio.on('connect')
-def handle_connect():
+def handle_connect():  # ← НЕ МЕНЯЕМ, ОСТАВЛЯЕМ КАК ЕСТЬ!
     username = session.get('username')
     if username:
         db.set_user_online(username, True)
         user_sockets[username] = request.sid
         all_users = db.get_all_users()
-        socketio.emit('users_update', all_users, broadcast=True)
+        emit('users_update', all_users, broadcast=True)  # ← УБРАЛ socketio.
         print(f'{username} подключился')
+        return True
     else:
         print('Анонимное подключение отклонено')
         return False
@@ -188,7 +190,7 @@ def handle_disconnect():
         db.set_user_online(username, False)
         if username in user_sockets:
             del user_sockets[username]
-        socketio.emit('user_offline', {'username': username}, broadcast=True)
+        emit('user_offline', {'username': username}, broadcast=True)  # ← УБРАЛ socketio.
         print(f'{username} отключился')
 
 @socketio.on('send_message')
@@ -198,7 +200,7 @@ def handle_message(data):
         return
     msg = db.save_general_message(username, data['text'])
     if msg:
-        socketio.emit('new_message', msg, broadcast=True)
+        emit('new_message', msg, broadcast=True)  # ← УБРАЛ socketio.
 
 @socketio.on('send_private')
 def handle_private(data):
@@ -212,13 +214,13 @@ def handle_private(data):
     
     if msg:
         if to_user in user_sockets:
-            socketio.emit('new_private', msg, room=user_sockets[to_user])
+            emit('new_private', msg, room=user_sockets[to_user])  # ← УБРАЛ socketio.
         
-        socketio.emit('new_private', msg, room=request.sid)
+        emit('new_private', msg, room=request.sid)  # ← УБРАЛ socketio.
         
         if to_user in user_sockets:
             unread = db.get_unread_count(to_user)
-            socketio.emit('unread_update', unread, room=user_sockets[to_user])
+            emit('unread_update', unread, room=user_sockets[to_user])  # ← УБРАЛ socketio.
 
 @socketio.on('typing')
 def handle_typing(data):
@@ -227,13 +229,13 @@ def handle_typing(data):
         return
 
     if data['to'] == 'general':
-        socketio.emit('user_typing', {
+        emit('user_typing', {  # ← УБРАЛ socketio.
             'username': username,
             'is_typing': data['is_typing']
         }, broadcast=True, include_self=False)
     else:
         if data['to'] in user_sockets:
-            socketio.emit('user_typing_private', {
+            emit('user_typing_private', {  # ← УБРАЛ socketio.
                 'username': username,
                 'is_typing': data['is_typing']
             }, room=user_sockets[data['to']])
