@@ -10,24 +10,24 @@ from datetime import datetime
 import json
 import database as db
 
-
-# ✅ Важно для Render!
-if os.environ.get('RENDER'):
+# ============ ПРОВЕРКА RENDER ============
+if os.environ.get('RENDER') or os.environ.get('DATABASE_URL'):
     os.environ['RENDER'] = 'true'
+
 # ============ СОЗДАНИЕ ПРИЛОЖЕНИЯ ============
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'eptagram_secret_key_2024'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'eptagram_secret_key_2024')
 app.config['SECRET_KEY_TYPE'] = 'bytes'
 
-# ============ НАСТРОЙКА SOCKETIO ДЛЯ RENDER ============
+# ============ НАСТРОЙКА SOCKETIO ============
 socketio = SocketIO(
     app,
     cors_allowed_origins="*",
     async_mode='gevent',
     ping_timeout=60,
     ping_interval=25,
-    logger=True,  # Временно включи для отладки
-    engineio_logger=True
+    logger=False,
+    engineio_logger=False
 )
 
 # ============ ХРАНИЛИЩЕ ============
@@ -44,10 +44,10 @@ def index():
 def chat():
     if 'username' not in session:
         return redirect(url_for('index'))
-    
+
     all_users = db.get_all_users()
     other_users = [u['username'] for u in all_users if u['username'] != session['username']]
-    
+
     return render_template('chat.html',
                          username=session['username'],
                          users=other_users)
@@ -58,14 +58,14 @@ def login():
     username = request.form['username'].strip()
     if not username:
         return 'Ник не может быть пустым'
-    
+
     if db.get_user_status(username) is not None:
         return 'Этот ник уже занят! <a href="/">Попробовать другой</a>'
-    
+
     db.add_user(username)
     session['username'] = username
     db.set_user_online(username, True)
-    
+
     return redirect(url_for('chat'))
 
 @app.route('/logout')
@@ -88,7 +88,7 @@ def get_private_messages(user):
     current_user = session.get('username')
     if not current_user:
         return jsonify([])
-    
+
     db.mark_private_as_read(user, current_user)
     messages = db.get_private_messages(current_user, user, 50)
     return jsonify(messages)
@@ -109,7 +109,10 @@ def handle_connect():
         user_sockets[username] = request.sid
         all_users = db.get_all_users()
         emit('users_update', all_users, broadcast=True)
-        print(f'✅ {username} подключился')
+        print(f'{username} подключился')
+    else:
+        print('Анонимное подключение отклонено')
+        return False
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -119,39 +122,49 @@ def handle_disconnect():
         if username in user_sockets:
             del user_sockets[username]
         emit('user_offline', {'username': username}, broadcast=True)
-        print(f'❌ {username} отключился')
+        print(f'{username} отключился')
 
 @socketio.on('send_message')
 def handle_message(data):
-    username = session['username']
+    username = session.get('username')
+    if not username:
+        return
     msg = db.save_general_message(username, data['text'])
-    # Отправляем всем, включая отправителя
-    emit('new_message', msg, broadcast=True)
+    if msg:
+        emit('new_message', msg, broadcast=True)
+        print(f'Сообщение от {username}: {data["text"][:20]}...')
 
 @socketio.on('send_private')
 def handle_private(data):
-    from_user = session['username']
+    from_user = session.get('username')
+    if not from_user:
+        return
     to_user = data['to']
     text = data['text']
-    
+
     msg = db.save_private_message(from_user, to_user, text)
     
-    # Отправляем получателю
-    if to_user in user_sockets:
-        emit('new_private', msg, room=user_sockets[to_user])
-    
-    # Отправляем отправителю
-    emit('new_private', msg, room=request.sid)
-    
-    # Уведомление о непрочитанных
-    if to_user in user_sockets:
-        unread = db.get_unread_count(to_user)
-        emit('unread_update', unread, room=user_sockets[to_user])
+    if msg:
+        # Отправляем получателю
+        if to_user in user_sockets:
+            emit('new_private', msg, room=user_sockets[to_user])
+        
+        # Отправляем отправителю
+        emit('new_private', msg, room=request.sid)
+        
+        # Уведомление о непрочитанных
+        if to_user in user_sockets:
+            unread = db.get_unread_count(to_user)
+            emit('unread_update', unread, room=user_sockets[to_user])
+        
+        print(f'Личное от {from_user} к {to_user}')
 
 @socketio.on('typing')
 def handle_typing(data):
-    username = session['username']
-    
+    username = session.get('username')
+    if not username:
+        return
+
     if data['to'] == 'general':
         emit('user_typing', {
             'username': username,
