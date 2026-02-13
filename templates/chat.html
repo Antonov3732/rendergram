@@ -534,14 +534,17 @@
     
     if (currentChannel === 'general') {
         socket.emit('send_message', { text: text });
-        // ❌ УДАЛИ displayMessage() - сообщение придет через socket.on('new_message')
+        // НЕ вызывай displayMessage() - сервер вернет сообщение всем!
     } else {
         socket.emit('send_private', {
             to: currentUser,
             text: text
         });
-        // ❌ УДАЛИ displayPrivateMessage() - сообщение придет через socket.on('new_private')
+        // НЕ вызывай displayPrivateMessage() - сервер вернет сообщение!
     }
+    
+    input.value = '';
+}
     
     input.value = '';
 }
