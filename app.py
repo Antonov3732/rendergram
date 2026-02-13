@@ -1,5 +1,4 @@
 # ============ ИМПОРТЫ ============
-# gevent ДОЛЖЕН БЫТЬ ПЕРВЫМ!
 from gevent import monkey
 monkey.patch_all()
 
@@ -31,7 +30,7 @@ socketio = SocketIO(
 )
 
 # ============ ХРАНИЛИЩЕ ============
-user_sockets = {}  # username: socket_id
+user_sockets = {}
 
 # ============ МАРШРУТЫ ============
 @app.route('/')
@@ -40,33 +39,62 @@ def index():
         return redirect(url_for('chat'))
     return render_template('login.html')
 
+@app.route('/register')
+def register_page():
+    if 'username' in session:
+        return redirect(url_for('chat'))
+    return render_template('register.html')
+
 @app.route('/chat')
 def chat():
     if 'username' not in session:
         return redirect(url_for('index'))
 
     all_users = db.get_all_users()
-    other_users = [u['username'] for u in all_users if u['username'] != session['username']]
-
+    current_avatar = db.get_avatar(session['username'])
+    
     return render_template('chat.html',
                          username=session['username'],
-                         users=other_users)
+                         users=all_users,
+                         avatar=current_avatar)
 
 # ============ АВТОРИЗАЦИЯ ============
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form['username'].strip()
-    if not username:
-        return 'Ник не может быть пустым'
+    password = request.form['password'].strip()
+    
+    if not username or not password:
+        return 'Ник и пароль не могут быть пустыми'
 
-    if db.get_user_status(username) is not None:
-        return 'Этот ник уже занят! <a href="/">Попробовать другой</a>'
+    if db.check_user(username, password):
+        session['username'] = username
+        db.set_user_online(username, True)
+        return redirect(url_for('chat'))
+    else:
+        return 'Неверный ник или пароль! <a href="/">Попробовать снова</a>'
 
-    db.add_user(username)
-    session['username'] = username
-    db.set_user_online(username, True)
+@app.route('/register', methods=['POST'])
+def register():
+    username = request.form['username'].strip()
+    password = request.form['password'].strip()
+    confirm = request.form['confirm_password'].strip()
+    
+    if not username or not password:
+        return 'Ник и пароль не могут быть пустыми'
+    
+    if password != confirm:
+        return 'Пароли не совпадают! <a href="/register">Попробовать снова</a>'
+    
+    if len(password) < 4:
+        return 'Пароль должен быть минимум 4 символа! <a href="/register">Попробовать снова</a>'
 
-    return redirect(url_for('chat'))
+    if db.add_user(username, password):
+        session['username'] = username
+        db.set_user_online(username, True)
+        return redirect(url_for('chat'))
+    else:
+        return 'Этот ник уже занят! <a href="/register">Попробовать другой</a>'
 
 @app.route('/logout')
 def logout():
@@ -78,7 +106,31 @@ def logout():
         socketio.emit('user_offline', {'username': username}, broadcast=True)
     return redirect(url_for('index'))
 
-# ============ API ============
+# ============ API ДЛЯ АВАТАРОВ ============
+@app.route('/api/avatar', methods=['POST'])
+def update_avatar():
+    if 'username' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
+    
+    data = request.json
+    avatar = data.get('avatar')
+    
+    if db.update_avatar(session['username'], avatar):
+        # Оповещаем всех о новом аватаре
+        socketio.emit('avatar_update', {
+            'username': session['username'],
+            'avatar': avatar
+        }, broadcast=True)
+        return jsonify({'success': True})
+    
+    return jsonify({'error': 'Failed to update avatar'}), 400
+
+@app.route('/api/avatar/<username>')
+def get_avatar(username):
+    avatar = db.get_avatar(username)
+    return jsonify({'avatar': avatar})
+
+# ============ API ДЛЯ СООБЩЕНИЙ ============
 @app.route('/api/messages')
 def get_messages():
     return jsonify(db.get_general_messages(50))
@@ -132,7 +184,6 @@ def handle_message(data):
     msg = db.save_general_message(username, data['text'])
     if msg:
         emit('new_message', msg, broadcast=True)
-        print(f'Сообщение от {username}: {data["text"][:20]}...')
 
 @socketio.on('send_private')
 def handle_private(data):
@@ -145,19 +196,13 @@ def handle_private(data):
     msg = db.save_private_message(from_user, to_user, text)
     
     if msg:
-        # Отправляем получателю
         if to_user in user_sockets:
             emit('new_private', msg, room=user_sockets[to_user])
-        
-        # Отправляем отправителю
         emit('new_private', msg, room=request.sid)
         
-        # Уведомление о непрочитанных
         if to_user in user_sockets:
             unread = db.get_unread_count(to_user)
             emit('unread_update', unread, room=user_sockets[to_user])
-        
-        print(f'Личное от {from_user} к {to_user}')
 
 @socketio.on('typing')
 def handle_typing(data):
@@ -177,7 +222,6 @@ def handle_typing(data):
                 'is_typing': data['is_typing']
             }, room=user_sockets[data['to']])
 
-# ============ ЗАПУСК (ТОЛЬКО ДЛЯ ЛОКАЛКИ) ============
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     socketio.run(app, host='0.0.0.0', port=port, debug=True)
