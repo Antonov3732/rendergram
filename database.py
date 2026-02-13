@@ -3,7 +3,6 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime, timezone
 import hashlib
-import base64
 
 # База данных
 DATABASE_URL = os.environ.get('DATABASE_URL')
@@ -16,7 +15,6 @@ def init_db():
     conn = get_db()
     cur = conn.cursor()
     
-    # Таблица пользователей (добавлены пароль и аватар)
     cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
@@ -28,7 +26,6 @@ def init_db():
         )
     ''')
     
-    # Таблица общих сообщений
     cur.execute('''
         CREATE TABLE IF NOT EXISTS general_messages (
             id SERIAL PRIMARY KEY,
@@ -39,7 +36,6 @@ def init_db():
         )
     ''')
     
-    # Таблица личных сообщений
     cur.execute('''
         CREATE TABLE IF NOT EXISTS private_messages (
             id SERIAL PRIMARY KEY,
@@ -68,6 +64,25 @@ def validate_password(password, hash):
 
 # ============ ПОЛЬЗОВАТЕЛИ ============
 
+def get_user_status(username):
+    """Проверяет, существует ли пользователь"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT username FROM users WHERE username = %s', (username,))
+        result = cur.fetchone()
+        conn.close()
+        
+        if result:
+            print(f"🔍 Пользователь {username} НАЙДЕН в БД")
+            return True
+        else:
+            print(f"🔍 Пользователь {username} НЕ НАЙДЕН в БД")
+            return None
+    except Exception as e:
+        print(f"❌ Ошибка проверки пользователя: {e}")
+        return None
+
 def add_user(username, password):
     """Добавляет нового пользователя с паролем"""
     try:
@@ -76,17 +91,21 @@ def add_user(username, password):
         now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         password_hash = hash_password(password)
         
+        cur.execute('SELECT username FROM users WHERE username = %s', (username,))
+        if cur.fetchone():
+            print(f"⚠️ Пользователь {username} УЖЕ существует")
+            conn.close()
+            return False
+        
         cur.execute(
             'INSERT INTO users (username, password, registered, last_seen) VALUES (%s, %s, %s, %s)',
             (username, password_hash, now, now)
         )
         conn.commit()
         conn.close()
-        print(f"👤 Пользователь {username} добавлен")
+        print(f"✅ Пользователь {username} успешно добавлен")
         return True
-    except psycopg2.IntegrityError:
-        print(f"⚠️ Пользователь {username} уже существует")
-        return False
+        
     except Exception as e:
         print(f"❌ Ошибка добавления пользователя: {e}")
         return False
@@ -101,7 +120,9 @@ def check_user(username, password):
         conn.close()
         
         if result and validate_password(password, result['password']):
+            print(f"✅ Успешный вход: {username}")
             return True
+        print(f"❌ Неудачная попытка входа: {username}")
         return False
     except Exception as e:
         print(f"❌ Ошибка проверки пользователя: {e}")
@@ -159,18 +180,6 @@ def get_all_users():
         print(f"❌ Ошибка загрузки пользователей: {e}")
         return []
 
-def get_user_status(username):
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute('SELECT online FROM users WHERE username = %s', (username,))
-        result = cur.fetchone()
-        conn.close()
-        return result['online'] if result else None
-    except Exception as e:
-        print(f"❌ Ошибка проверки статуса: {e}")
-        return None
-
 # ============ ОБЩИЙ ЧАТ ============
 
 def save_general_message(username, text):
@@ -188,7 +197,7 @@ def save_general_message(username, text):
         conn.commit()
         conn.close()
         
-        print(f"✅ Сообщение сохранено! ID: {message_id}, от: {username}")
+        print(f"✅ Сообщение сохранено! ID: {message_id}")
         
         return {
             'id': message_id,
@@ -221,7 +230,6 @@ def get_general_messages(limit=50):
                 'time': row['time'],
                 'date': row['date']
             })
-        print(f"📖 Загружено {len(messages)} сообщений из общего чата")
         return messages
     except Exception as e:
         print(f"❌ Ошибка загрузки сообщений: {e}")
@@ -243,8 +251,6 @@ def save_private_message(from_user, to_user, text):
         message_id = cur.fetchone()['id']
         conn.commit()
         conn.close()
-        
-        print(f"✅ Личное сообщение сохранено! ID: {message_id}, от: {from_user} -> {to_user}")
         
         return {
             'id': message_id,
