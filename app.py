@@ -252,6 +252,24 @@ def handle_typing(data):
                 'username': username,
                 'is_typing': data['is_typing']
             }, room=user_sockets[data['to']])
+# ============ API ДЛЯ ФОНОВЫХ КАРТИНОК ============
+@app.route('/api/bg-image', methods=['POST'])
+def update_bg_image():
+    if 'username' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
+    
+    data = request.json
+    image = data.get('image')
+    
+    if db.update_bg_image(session['username'], image):
+        return jsonify({'success': True})
+    
+    return jsonify({'error': 'Failed to update background image'}), 400
+
+@app.route('/api/bg-image/<username>')
+def get_bg_image(username):
+    image = db.get_bg_image(username)
+    return jsonify({'image': image})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
