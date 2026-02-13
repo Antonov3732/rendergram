@@ -8,20 +8,20 @@ DB_PATH = 'eptagram.db'
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    
+
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (username TEXT PRIMARY KEY,
                   online BOOLEAN DEFAULT 0,
                   last_seen TEXT,
                   registered TEXT)''')
-    
+
     c.execute('''CREATE TABLE IF NOT EXISTS general_messages
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT,
                   text TEXT,
                   time TEXT,
                   date TEXT)''')
-    
+
     c.execute('''CREATE TABLE IF NOT EXISTS private_messages
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   from_user TEXT,
@@ -30,7 +30,7 @@ def init_db():
                   time TEXT,
                   date TEXT,
                   is_read BOOLEAN DEFAULT 0)''')
-    
+
     conn.commit()
     conn.close()
     print("✅ База данных инициализирована")
@@ -88,20 +88,21 @@ def get_user_status(username):
 def save_general_message(username, text):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    now_utc = datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
+    # ✅ ТОЛЬКО ВРЕМЯ, БЕЗ ДАТЫ (ЧЧ:ММ)
+    now_time = datetime.now(pytz.UTC).strftime('%H:%M')
     now_date = datetime.now(pytz.UTC).strftime('%d.%m.%Y')
     c.execute('''INSERT INTO general_messages (username, text, time, date)
-                 VALUES (?, ?, ?, ?)''', (username, text, now_utc, now_date))
+                 VALUES (?, ?, ?, ?)''', (username, text, now_time, now_date))
     message_id = c.lastrowid
     conn.commit()
     conn.close()
-    
+
     return {
         'id': message_id,
         'from': username,
         'text': text,
-        'time': now_utc,
-        'date': now_date
+        'time': now_time,  # ✅ Только ЧЧ:ММ в UTC
+        'date': now_date   # ✅ Дата отдельно
     }
 
 def get_general_messages(limit=50):
@@ -116,8 +117,8 @@ def get_general_messages(limit=50):
             'id': row[0],
             'from': row[1],
             'text': row[2],
-            'time': row[3],
-            'date': row[4]
+            'time': row[3],  # ✅ ЧЧ:ММ в UTC
+            'date': row[4]   # ✅ Дата
         })
     conn.close()
     return messages
@@ -127,21 +128,22 @@ def get_general_messages(limit=50):
 def save_private_message(from_user, to_user, text):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    now_utc = datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
+    # ✅ ТОЛЬКО ВРЕМЯ, БЕЗ ДАТЫ (ЧЧ:ММ)
+    now_time = datetime.now(pytz.UTC).strftime('%H:%M')
     now_date = datetime.now(pytz.UTC).strftime('%d.%m.%Y')
     c.execute('''INSERT INTO private_messages (from_user, to_user, text, time, date, is_read)
-                 VALUES (?, ?, ?, ?, ?, 0)''', (from_user, to_user, text, now_utc, now_date))
+                 VALUES (?, ?, ?, ?, ?, 0)''', (from_user, to_user, text, now_time, now_date))
     message_id = c.lastrowid
     conn.commit()
     conn.close()
-    
+
     return {
         'id': message_id,
         'from': from_user,
         'to': to_user,
         'text': text,
-        'time': now_utc,
-        'date': now_date
+        'time': now_time,  # ✅ Только ЧЧ:ММ в UTC
+        'date': now_date   # ✅ Дата отдельно
     }
 
 def get_private_messages(user1, user2, limit=50):
@@ -158,8 +160,8 @@ def get_private_messages(user1, user2, limit=50):
             'from': row[1],
             'to': row[2],
             'text': row[3],
-            'time': row[4],
-            'date': row[5]
+            'time': row[4],  # ✅ ЧЧ:ММ в UTC
+            'date': row[5]   # ✅ Дата
         })
     conn.close()
     return messages
