@@ -64,8 +64,6 @@ def validate_password(password, hash):
 
 # ============ ПОЛЬЗОВАТЕЛИ ============
 
-# ============ ПОЛЬЗОВАТЕЛИ ============
-
 def get_user_status(username):
     """Проверяет, существует ли пользователь"""
     try:
@@ -77,13 +75,13 @@ def get_user_status(username):
         
         if result:
             print(f"🔍 Пользователь {username} НАЙДЕН в БД")
-            return True  # Возвращаем True если найден
+            return True
         else:
             print(f"🔍 Пользователь {username} НЕ НАЙДЕН в БД")
-            return False  # Возвращаем False если не найден
+            return False
     except Exception as e:
         print(f"❌ Ошибка проверки пользователя: {e}")
-        return False  # В случае ошибки тоже False
+        return False
 
 def add_user(username, password):
     """Добавляет нового пользователя с паролем"""
@@ -93,21 +91,19 @@ def add_user(username, password):
         now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         password_hash = hash_password(password)
         
-        # Сначала проверим, есть ли уже такой пользователь
         cur.execute('SELECT username FROM users WHERE username = %s', (username,))
         if cur.fetchone():
             print(f"⚠️ Пользователь {username} УЖЕ существует")
             conn.close()
             return False
         
-        # Если нет - добавляем
         cur.execute(
             'INSERT INTO users (username, password, registered, last_seen) VALUES (%s, %s, %s, %s)',
             (username, password_hash, now, now)
         )
         conn.commit()
         conn.close()
-        print(f"✅ Пользователь {username} успешно добавлен в БД")
+        print(f"✅ Пользователь {username} успешно добавлен")
         return True
         
     except Exception as e:
@@ -214,13 +210,13 @@ def save_general_message(username, text):
         print(f"❌ Ошибка сохранения сообщения: {e}")
         return None
 
-def get_general_messages(limit=50):
+def get_general_messages(limit=50, offset=0):
     try:
         conn = get_db()
         cur = conn.cursor()
         cur.execute(
-            'SELECT id, username, text, time, date FROM general_messages ORDER BY id DESC LIMIT %s',
-            (limit,)
+            'SELECT id, username, text, time, date FROM general_messages ORDER BY id DESC LIMIT %s OFFSET %s',
+            (limit, offset)
         )
         rows = cur.fetchall()
         conn.close()
@@ -268,7 +264,7 @@ def save_private_message(from_user, to_user, text):
         print(f"❌ Ошибка сохранения личного сообщения: {e}")
         return None
 
-def get_private_messages(user1, user2, limit=50):
+def get_private_messages(user1, user2, limit=50, offset=0):
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -276,8 +272,8 @@ def get_private_messages(user1, user2, limit=50):
             '''SELECT id, from_user, to_user, text, time, date 
                FROM private_messages 
                WHERE (from_user = %s AND to_user = %s) OR (from_user = %s AND to_user = %s)
-               ORDER BY id DESC LIMIT %s''',
-            (user1, user2, user2, user1, limit)
+               ORDER BY id DESC LIMIT %s OFFSET %s''',
+            (user1, user2, user2, user1, limit, offset)
         )
         rows = cur.fetchall()
         conn.close()
