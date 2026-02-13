@@ -23,7 +23,6 @@ def init_db():
                 avatar TEXT,
                 bg_image TEXT,
                 bg_pattern TEXT DEFAULT 'default',
-                bg_opacity INTEGER DEFAULT 30,
                 online INTEGER DEFAULT 0,
                 last_seen TEXT,
                 registered TEXT
@@ -185,58 +184,6 @@ def get_bg_image(username):
     except Exception as e:
         print(f"❌ Ошибка получения фона: {e}")
         return None
-
-def update_bg_pattern(username, pattern):
-    """Обновляет паттерн фона пользователя"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute('UPDATE users SET bg_pattern = %s WHERE username = %s', (pattern, username))
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"❌ Ошибка обновления паттерна: {e}")
-        return False
-
-def get_bg_pattern(username):
-    """Получает паттерн фона пользователя"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute('SELECT bg_pattern FROM users WHERE username = %s', (username,))
-        result = cur.fetchone()
-        conn.close()
-        return result['bg_pattern'] if result else 'default'
-    except Exception as e:
-        print(f"❌ Ошибка получения паттерна: {e}")
-        return 'default'
-
-def update_bg_opacity(username, opacity):
-    """Сохраняет значение непрозрачности"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute('UPDATE users SET bg_opacity = %s WHERE username = %s', (opacity, username))
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"❌ Ошибка сохранения непрозрачности: {e}")
-        return False
-
-def get_bg_opacity(username):
-    """Получает значение непрозрачности"""
-    try:
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute('SELECT bg_opacity FROM users WHERE username = %s', (username,))
-        result = cur.fetchone()
-        conn.close()
-        return result['bg_opacity'] if result else 30
-    except Exception as e:
-        print(f"❌ Ошибка получения непрозрачности: {e}")
-        return 30
 
 def set_user_online(username, online=True):
     try:
