@@ -375,6 +375,36 @@
         let typingTimeout = null;
         let unreadMessages = {};
         const displayedMessageIds = new Set();
+// ============ ЗАГРУЗКА ИСТОРИИ ПРИ СТАРТЕ ============
+console.log('🔄 Загружаю историю сообщений...');
+
+// Загрузка общего чата
+fetch('/api/messages')
+    .then(res => res.json())
+    .then(messages => {
+        console.log(`📥 Загружено ${messages.length} сообщений из истории`);
+        messages.forEach(msg => {
+            const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+            displayedMessageIds.add(msgId);
+            displayMessage(msg);
+        });
+    })
+    .catch(err => console.error('❌ Ошибка загрузки истории:', err));
+
+// Загрузка непрочитанных
+fetch('/api/unread')
+    .then(res => res.json())
+    .then(unread => {
+        unreadMessages = unread;
+        for (let [user, count] of Object.entries(unread)) {
+            const badge = document.getElementById(`notify-${user}`);
+            if (badge && count > 0) {
+                badge.style.display = 'inline';
+                badge.textContent = count;
+            }
+        }
+    })
+    .catch(err => console.error('❌ Ошибка загрузки непрочитанных:', err));
 
         // ============ ФУНКЦИИ ДЛЯ КНОПОК ============
         
