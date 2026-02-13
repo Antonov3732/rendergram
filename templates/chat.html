@@ -246,15 +246,51 @@
             }
         }
 
-       .messages {
+/* ============ ФОН ЧАТА ============ */
+.messages {
     flex: 1;
     overflow-y: auto;
     padding: clamp(16px, 4vw, 24px);
     display: flex;
     flex-direction: column;
     gap: clamp(12px, 3vw, 16px);
-    background: #000000;  /* ← ДОБАВЬ ЭТУ СТРОКУ */
-    position: relative;    /* ← ЭТО ДЛЯ ФОНА (уже должно быть ниже) */
+    background: #000000;  /* черный фон по умолчанию */
+    position: relative;
+    min-height: 100%;
+}
+
+/* Контейнер для фоновой картинки */
+.messages.has-bg-image {
+    background: transparent;  /* убираем черный фон */
+}
+
+.messages.has-bg-image::before {
+    content: '';
+    position: absolute;  /* обратно на absolute */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: var(--user-bg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: var(--bg-opacity, 0.3);
+    pointer-events: none;
+    z-index: 1;  /* ПОВЕРХ черного фона */
+}
+
+/* Сами сообщения - ПОВЕРХ картинки */
+.messages > * {
+    position: relative;
+    z-index: 2;  /* сообщения поверх всего */
+}
+
+/* Для мобилок */
+@media (max-width: 768px) {
+    .messages.has-bg-image::before {
+        background-attachment: fixed;  /* фиксируем на мобилках */
+    }
 }
 
         .message {
