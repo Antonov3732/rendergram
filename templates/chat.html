@@ -246,14 +246,16 @@
             }
         }
 
-        .messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: clamp(16px, 4vw, 24px);
-            display: flex;
-            flex-direction: column;
-            gap: clamp(12px, 3vw, 16px);
-        }
+       .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: clamp(16px, 4vw, 24px);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(12px, 3vw, 16px);
+    background: #000000;  /* ← ДОБАВЬ ЭТУ СТРОКУ */
+    position: relative;    /* ← ЭТО ДЛЯ ФОНА (уже должно быть ниже) */
+}
 
         .message {
             max-width: min(70%, 600px);
@@ -625,7 +627,7 @@
 }
 
 /* Превью тем - теперь только базовая */
-.bg-preview.default { background: #1a1a1a; }
+.bg-preview.default { background: #000000; }
 /* Все остальные превью (dark-gradient, space, forest, ocean, grid, dots) - УДАЛИ! */
 }
 .bg-preview.dots {
@@ -1550,6 +1552,7 @@ async function setDefaultBg() {
     // Сбрасываем классы
     messagesDiv.className = 'messages';
     messagesDiv.classList.add('default');
+    messagesDiv.style.background = '#000000';
     
     // Подсвечиваем стандартную тему
     document.querySelectorAll('.bg-option').forEach(opt => {
