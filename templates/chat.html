@@ -599,8 +599,7 @@
             </div>
         </div>
     </div>
-
-    <script>
+        <script>
         const socket = io();
         const username = '{{ username }}';
         let currentChannel = 'general';
@@ -608,11 +607,17 @@
         let typingTimeout = null;
         let unreadMessages = {};
         const displayedMessageIds = new Set();
-                // ============ ФУНКЦИИ ДЛЯ АВАТАРОВ ============
+        
+        // ============ ПЕРЕМЕННЫЕ ДЛЯ ПАГИНАЦИИ ============
+        let currentOffset = 0;
+        let hasMoreHistory = true;
+        let isLoadingHistory = false;
+        const MESSAGES_PER_PAGE = 20;
+
+        // ============ ФУНКЦИИ ДЛЯ АВАТАРОВ ============
         
         function openAvatarModal() {
             document.getElementById('avatarModal').classList.add('show');
-            // Загружаем текущий аватар в превью
             const currentAvatar = document.getElementById('userAvatar').src;
             document.getElementById('previewImage').src = currentAvatar;
         }
@@ -621,18 +626,15 @@
             document.getElementById('avatarModal').classList.remove('show');
         }
 
-        // Обработка выбора файла
         document.getElementById('avatarUpload').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Проверка размера (2MB)
             if (file.size > 2 * 1024 * 1024) {
                 alert('Файл слишком большой. Максимум 2MB');
                 return;
             }
 
-            // Проверка типа
             if (!file.type.startsWith('image/')) {
                 alert('Можно загружать только изображения');
                 return;
@@ -683,7 +685,6 @@
             }
         }
 
-        // Получение аватара пользователя
         async function loadUserAvatar() {
             try {
                 const response = await fetch(`/api/avatar/${username}`);
@@ -701,11 +702,9 @@
         function loadHistory() {
             console.log('Загружаю историю сообщений...');
             
-            // Загрузка аватара пользователя
             loadUserAvatar();
             
-            // Загрузка общего чата
-            fetch('/api/messages')
+            fetch('/api/messages?limit=20')
                 .then(res => res.json())
                 .then(messages => {
                     console.log('Загружено сообщений:', messages.length);
@@ -716,10 +715,13 @@
                             displayMessage(msg);
                         }
                     });
+                    currentOffset = messages.length;
+                    if (messages.length < 20) {
+                        hasMoreHistory = false;
+                    }
                 })
                 .catch(err => console.error('Ошибка загрузки истории:', err));
 
-            // Загрузка непрочитанных
             fetch('/api/unread')
                 .then(res => res.json())
                 .then(unread => {
@@ -735,8 +737,84 @@
                 .catch(err => console.error('Ошибка загрузки непрочитанных:', err));
         }
 
-        // Загружаем историю сразу
         loadHistory();
+
+        // ============ БЕСКОНЕЧНАЯ ПРОКРУТКА ============
+        
+        const messagesContainer = document.getElementById('chatMessages');
+        let scrollTimeout;
+
+        messagesContainer.addEventListener('scroll', function() {
+            clearTimeout(scrollTimeout);
+            
+            scrollTimeout = setTimeout(() => {
+                if (this.scrollTop < 50 && hasMoreHistory && !isLoadingHistory) {
+                    loadMoreMessages();
+                }
+            }, 200);
+        });
+
+        async function loadMoreMessages() {
+            if (isLoadingHistory || !hasMoreHistory) return;
+            
+            isLoadingHistory = true;
+            console.log(`📦 Загружаю пачку начиная с ${currentOffset}`);
+            
+            try {
+                let url;
+                if (currentChannel === 'general') {
+                    url = `/api/messages?offset=${currentOffset}&limit=${MESSAGES_PER_PAGE}`;
+                } else {
+                    url = `/api/private/${currentUser}?offset=${currentOffset}&limit=${MESSAGES_PER_PAGE}`;
+                }
+                
+                const response = await fetch(url);
+                const messages = await response.json();
+                
+                console.log(`📥 Загружено ${messages.length} сообщений`);
+                
+                if (messages.length === 0) {
+                    hasMoreHistory = false;
+                    console.log('🏁 История закончилась');
+                    return;
+                }
+                
+                const oldHeight = messagesContainer.scrollHeight;
+                const oldScroll = messagesContainer.scrollTop;
+                
+                messages.reverse().forEach(msg => {
+                    const msgId = currentChannel === 'general' 
+                        ? `${msg.id}-${msg.from}-${msg.time}`
+                        : `${msg.id}-${msg.from}-${msg.time}-private`;
+                    
+                    if (!displayedMessageIds.has(msgId)) {
+                        displayedMessageIds.add(msgId);
+                        
+                        if (currentChannel === 'general') {
+                            const msgElement = createMessageElement(msg);
+                            messagesContainer.insertBefore(msgElement, messagesContainer.firstChild);
+                        } else {
+                            const msgElement = createPrivateMessageElement(msg);
+                            messagesContainer.insertBefore(msgElement, messagesContainer.firstChild);
+                        }
+                    }
+                });
+                
+                currentOffset += messages.length;
+                
+                if (messages.length < MESSAGES_PER_PAGE) {
+                    hasMoreHistory = false;
+                }
+                
+                const newHeight = messagesContainer.scrollHeight;
+                messagesContainer.scrollTop = oldScroll + (newHeight - oldHeight);
+                
+            } catch (error) {
+                console.error('❌ Ошибка загрузки пачки:', error);
+            } finally {
+                isLoadingHistory = false;
+            }
+        }
 
         // ============ ФУНКЦИИ ДЛЯ КНОПОК ============
 
@@ -756,6 +834,10 @@
                 toggleSidebar();
             }
 
+            currentOffset = 0;
+            hasMoreHistory = true;
+            isLoadingHistory = false;
+
             if (channel === 'general') {
                 document.getElementById('chatHeader').innerHTML = 'Общий чат';
                 currentChannel = 'general';
@@ -764,7 +846,7 @@
                 document.getElementById('chatMessages').innerHTML = '';
                 displayedMessageIds.clear();
 
-                fetch('/api/messages')
+                fetch('/api/messages?limit=20')
                     .then(res => res.json())
                     .then(messages => {
                         messages.forEach(msg => {
@@ -772,6 +854,10 @@
                             displayedMessageIds.add(msgId);
                             displayMessage(msg);
                         });
+                        currentOffset = messages.length;
+                        if (messages.length < 20) {
+                            hasMoreHistory = false;
+                        }
                     });
             } else {
                 document.getElementById('chatHeader').innerHTML = `${channel}`;
@@ -785,7 +871,7 @@
                 document.getElementById('chatMessages').innerHTML = '';
                 displayedMessageIds.clear();
 
-                fetch(`/api/private/${channel}`)
+                fetch(`/api/private/${channel}?limit=20`)
                     .then(res => res.json())
                     .then(messages => {
                         messages.forEach(msg => {
@@ -793,6 +879,10 @@
                             displayedMessageIds.add(msgId);
                             displayPrivateMessage(msg);
                         });
+                        currentOffset = messages.length;
+                        if (messages.length < 20) {
+                            hasMoreHistory = false;
+                        }
                     });
             }
         }
@@ -814,19 +904,13 @@
 
             input.value = '';
         }
-                // ============ ОТОБРАЖЕНИЕ СООБЩЕНИЙ ============
 
-        function displayMessage(msg) {
-            const messagesDiv = document.getElementById('chatMessages');
+        // ============ ФУНКЦИИ СОЗДАНИЯ СООБЩЕНИЙ ============
 
-            const msgId = `${msg.id}-${msg.from}-${msg.time}`;
-            if (displayedMessageIds.has(msgId)) return;
-            displayedMessageIds.add(msgId);
-
+        function createMessageElement(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-
-            // Получаем аватар отправителя
+            
             let senderAvatar = '';
             if (msg.from !== username) {
                 const userElement = document.getElementById(`user-${msg.from}`);
@@ -837,7 +921,7 @@
                     }
                 }
             }
-
+            
             messageDiv.innerHTML = `
                 ${msg.from !== username ? `
                     <div class="message-sender">
@@ -847,50 +931,61 @@
                     </div>
                 ` : ''}
                 <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                <div class="message-time">${msg.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
             `;
+            
+            return messageDiv;
+        }
 
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        function createPrivateMessageElement(msg) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+            
+            let senderAvatar = '';
+            if (msg.from !== username) {
+                const userElement = document.getElementById(`user-${msg.from}`);
+                if (userElement) {
+                    const avatarImg = userElement.querySelector('.user-avatar-small');
+                    if (avatarImg) {
+                        senderAvatar = avatarImg.src;
+                    }
+                }
+            }
+            
+            messageDiv.innerHTML = `
+                ${msg.from !== username ? `
+                    <div class="message-sender">
+                        <img class="user-avatar-small" src="${senderAvatar}" 
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
+                        ${escapeHtml(msg.from)}
+                    </div>
+                ` : ''}
+                <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
+            `;
+            
+            return messageDiv;
+        }
+
+        function displayMessage(msg) {
+            const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+            if (displayedMessageIds.has(msgId)) return;
+            displayedMessageIds.add(msgId);
+            
+            const msgElement = createMessageElement(msg);
+            messagesContainer.appendChild(msgElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
         function displayPrivateMessage(msg) {
             if (currentUser === msg.from || currentUser === msg.to) {
-                const messagesDiv = document.getElementById('chatMessages');
-
                 const msgId = `${msg.id}-${msg.from}-${msg.time}-private`;
                 if (displayedMessageIds.has(msgId)) return;
                 displayedMessageIds.add(msgId);
-
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-
-                // Получаем аватар отправителя
-                let senderAvatar = '';
-                if (msg.from !== username) {
-                    const userElement = document.getElementById(`user-${msg.from}`);
-                    if (userElement) {
-                        const avatarImg = userElement.querySelector('.user-avatar-small');
-                        if (avatarImg) {
-                            senderAvatar = avatarImg.src;
-                        }
-                    }
-                }
-
-                messageDiv.innerHTML = `
-                    ${msg.from !== username ? `
-                        <div class="message-sender">
-                            <img class="user-avatar-small" src="${senderAvatar}" 
-                                 onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
-                            ${escapeHtml(msg.from)}
-                        </div>
-                    ` : ''}
-                    <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                    <div class="message-time">${msg.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
-                `;
-
-                messagesDiv.appendChild(messageDiv);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                
+                const msgElement = createPrivateMessageElement(msg);
+                messagesContainer.appendChild(msgElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
             }
         }
 
@@ -920,7 +1015,6 @@
         });
 
         socket.on('avatar_update', function(data) {
-            // Обновляем аватар в списке пользователей
             const userElement = document.getElementById(`user-${data.username}`);
             if (userElement) {
                 const avatarImg = userElement.querySelector('.user-avatar-small');
@@ -929,10 +1023,7 @@
                 }
             }
             
-            // Обновляем аватар в сообщениях (перезагружаем историю?)
             if (currentChannel === 'general') {
-                // Можно перезагрузить историю или просто обновить отображение
-                // Для простоты - перезагружаем текущий канал
                 switchChannel(currentChannel);
             }
         });
@@ -1081,7 +1172,7 @@
                     window.scrollTo(0, document.body.scrollHeight);
                 }, 300);
             }
-                    });
+        });
 
         // ============ ПРОВЕРКА ПОДКЛЮЧЕНИЯ ============
 
@@ -1097,9 +1188,7 @@
             console.log('WebSocket отключен');
         });
 
-        // ============ ИНИЦИАЛИЗАЦИЯ ============
-
         console.log('Чат загружен, пользователь:', username);
     </script>
-    </body>
+</body>
 </html>
