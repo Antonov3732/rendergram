@@ -107,6 +107,7 @@ def register():
         print(f"❌ Ошибка при создании {username}")
         return 'Ошибка при регистрации! <a href="/register">Попробовать снова</a>'
 
+# ============ ВЫХОД (ИСПРАВЛЕНО) ============
 @app.route('/logout')
 def logout():
     username = session.pop('username', None)
@@ -114,11 +115,11 @@ def logout():
         db.set_user_online(username, False)
         if username in user_sockets:
             del user_sockets[username]
-        # ✅ ИСПРАВЛЕНО: используем socketio.emit (это ВНЕ обработчика)
+        # ✅ БЕЗ broadcast=True!
         socketio.emit('user_offline', {'username': username})
     return redirect(url_for('index'))
 
-# ============ API ДЛЯ АВАТАРОВ ============
+# ============ API ДЛЯ АВАТАРОВ (ИСПРАВЛЕНО) ============
 @app.route('/api/avatar', methods=['POST'])
 def update_avatar():
     if 'username' not in session:
@@ -128,7 +129,7 @@ def update_avatar():
     avatar = data.get('avatar')
     
     if db.update_avatar(session['username'], avatar):
-        # ✅ ИСПРАВЛЕНО: используем socketio.emit (это ВНЕ обработчика)
+        # ✅ БЕЗ broadcast=True!
         socketio.emit('avatar_update', {
             'username': session['username'],
             'avatar': avatar
@@ -178,7 +179,7 @@ def handle_connect(auth=None):
         db.set_user_online(username, True)
         user_sockets[username] = request.sid
         all_users = db.get_all_users()
-        # ✅ ВНУТРИ обработчика - просто emit!
+        # ✅ ВНУТРИ ОБРАБОТЧИКА - МОЖНО broadcast!
         emit('users_update', all_users, broadcast=True)
         print(f'{username} подключился')
         return True
@@ -193,7 +194,7 @@ def handle_disconnect():
         db.set_user_online(username, False)
         if username in user_sockets:
             del user_sockets[username]
-        # ✅ ВНУТРИ обработчика - просто emit!
+        # ✅ ВНУТРИ ОБРАБОТЧИКА - МОЖНО broadcast!
         emit('user_offline', {'username': username}, broadcast=True)
         print(f'{username} отключился')
 
@@ -202,10 +203,12 @@ def handle_message(data):
     username = session.get('username')
     if not username:
         return
+    print(f"📤 Получено сообщение от {username}: {data['text'][:30]}...")
     msg = db.save_general_message(username, data['text'])
     if msg:
-        # ✅ ВНУТРИ обработчика - просто emit!
+        # ✅ ВНУТРИ ОБРАБОТЧИКА - МОЖНО broadcast!
         emit('new_message', msg, broadcast=True)
+        print(f"📢 Сообщение разослано всем")
 
 @socketio.on('send_private')
 def handle_private(data):
@@ -219,14 +222,15 @@ def handle_private(data):
     
     if msg:
         if to_user in user_sockets:
-            # ✅ ВНУТРИ обработчика - просто emit!
+            # ✅ ВНУТРИ ОБРАБОТЧИКА
             emit('new_private', msg, room=user_sockets[to_user])
-        # ✅ ВНУТРИ обработчика - просто emit!
+        
+        # ✅ ВНУТРИ ОБРАБОТЧИКА
         emit('new_private', msg, room=request.sid)
         
         if to_user in user_sockets:
             unread = db.get_unread_count(to_user)
-            # ✅ ВНУТРИ обработчика - просто emit!
+            # ✅ ВНУТРИ ОБРАБОТЧИКА
             emit('unread_update', unread, room=user_sockets[to_user])
 
 @socketio.on('typing')
@@ -236,14 +240,14 @@ def handle_typing(data):
         return
 
     if data['to'] == 'general':
-        # ✅ ВНУТРИ обработчика - просто emit!
+        # ✅ ВНУТРИ ОБРАБОТЧИКА - МОЖНО broadcast!
         emit('user_typing', {
             'username': username,
             'is_typing': data['is_typing']
         }, broadcast=True, include_self=False)
     else:
         if data['to'] in user_sockets:
-            # ✅ ВНУТРИ обработчика - просто emit!
+            # ✅ ВНУТРИ ОБРАБОТЧИКА
             emit('user_typing_private', {
                 'username': username,
                 'is_typing': data['is_typing']
