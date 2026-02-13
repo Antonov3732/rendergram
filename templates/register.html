@@ -146,12 +146,6 @@
             font-size: clamp(11px, 2.8vw, 12px);
             margin-top: 4px;
         }
-
-        @media (max-width: 480px) {
-            .register-box {
-                padding: 24px 16px;
-            }
-        }
     </style>
 </head>
 <body>
@@ -220,7 +214,6 @@
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
         const confirmInput = document.getElementById('confirm_password');
-        const submitBtn = document.getElementById('submitBtn');
         const errorMessage = document.getElementById('errorMessage');
 
         function showError(text) {
@@ -229,10 +222,6 @@
             setTimeout(() => {
                 errorMessage.classList.remove('show');
             }, 5000);
-        }
-
-        function validatePassword(password) {
-            return password.length >= 4;
         }
 
         form.addEventListener('submit', async function(e) {
@@ -247,7 +236,7 @@
                 return;
             }
 
-            if (!validatePassword(password)) {
+            if (password.length < 4) {
                 showError('Пароль должен быть минимум 4 символа');
                 return;
             }
