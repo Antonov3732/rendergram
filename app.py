@@ -7,7 +7,12 @@ import os
 from datetime import datetime
 import json
 import database as db
-
+import sys
+print("="*50)
+print("🚀 APP.PY ЗАПУЩЕН!")
+print(f"📁 Текущая папка: {os.getcwd()}")
+print(f"📁 Файлы в папке: {os.listdir('.')}")
+print("="*50)
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'eptagram_secret_key_2024'
 app.config['SECRET_KEY_TYPE'] = 'bytes'
