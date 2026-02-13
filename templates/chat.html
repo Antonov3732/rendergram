@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>EptaGram</title>
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
@@ -14,7 +14,7 @@
         }
         
         body {
-            background: #0a0a0a;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -24,44 +24,38 @@
         .chat-container {
             width: 1200px;
             height: 800px;
-            background: #0f0f0f;
+            background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
             display: flex;
-            border: 1px solid #2a2a2a;
         }
         
-        /* САЙДБАР */
         .sidebar {
             width: 300px;
-            background: #0a0a0a;
-            border-right: 1px solid #2a2a2a;
+            background: #f8f9fa;
+            border-right: 1px solid #e0e0e0;
             display: flex;
             flex-direction: column;
         }
         
         .user-profile {
             padding: 20px;
-            background: #0f0f0f;
-            border-bottom: 1px solid #2a2a2a;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
         }
         
         .user-name {
             font-size: 20px;
             font-weight: bold;
-            color: #9f7aea;
+            color: #764ba2;
             margin-bottom: 5px;
         }
         
         .logout-btn {
-            color: #fc8181;
+            color: #dc3545;
             text-decoration: none;
             font-size: 14px;
-        }
-        
-        .logout-btn:hover {
-            color: #f56565;
         }
         
         .channels {
@@ -71,22 +65,21 @@
         }
         
         .channel {
-            padding: 12px 15px;
+            padding: 15px;
             border-radius: 10px;
             cursor: pointer;
             margin-bottom: 5px;
-            transition: 0.2s;
+            transition: 0.3s;
             display: flex;
             align-items: center;
-            color: #e2e8f0;
         }
         
         .channel:hover {
-            background: #1a1a1a;
+            background: #e9ecef;
         }
         
         .channel.active {
-            background: #9f7aea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
         
@@ -102,24 +95,23 @@
             margin-right: 10px;
         }
         
-        .online { background: #48bb78; }
-        .offline { background: #a0aec0; }
+        .online { background: #28a745; }
+        .offline { background: #dc3545; }
         
-        /* ОСНОВНОЙ ЧАТ */
         .main-chat {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: #0f0f0f;
+            background: white;
         }
         
         .chat-header {
             padding: 20px;
-            background: #0a0a0a;
-            border-bottom: 1px solid #2a2a2a;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
             font-size: 18px;
             font-weight: bold;
-            color: #9f7aea;
+            color: #764ba2;
             display: flex;
             align-items: center;
         }
@@ -128,7 +120,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            background: #0a0a0a;
+            background: #f8f9fa;
         }
         
         .message {
@@ -145,32 +137,25 @@
             max-width: 70%;
             padding: 12px 18px;
             border-radius: 18px;
-            background: #1a1a1a;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             position: relative;
-            color: #e2e8f0;
-            border: 1px solid #2d2d2d;
         }
         
         .message-own .message-content {
-            background: #9f7aea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
         }
         
         .message-sender {
             font-weight: bold;
-            color: #9f7aea;
+            color: #764ba2;
             margin-bottom: 5px;
-        }
-        
-        .message-own .message-sender {
-            color: rgba(255,255,255,0.9);
         }
         
         .message-time {
             font-size: 11px;
-            color: #a0aec0;
+            color: #6c757d;
             margin-top: 5px;
             text-align: right;
         }
@@ -181,17 +166,15 @@
         
         .typing-indicator {
             padding: 10px 20px;
-            color: #a0aec0;
+            color: #6c757d;
             font-style: italic;
             font-size: 14px;
-            background: #0a0a0a;
-            border-top: 1px solid #2a2a2a;
         }
         
         .message-input-area {
             padding: 20px;
-            background: #0a0a0a;
-            border-top: 1px solid #2a2a2a;
+            background: white;
+            border-top: 1px solid #e0e0e0;
             display: flex;
             gap: 10px;
         }
@@ -199,42 +182,35 @@
         .message-input {
             flex: 1;
             padding: 12px;
-            border: 1px solid #2d2d2d;
+            border: 2px solid #e0e0e0;
             border-radius: 25px;
             font-size: 15px;
-            transition: 0.2s;
-            background: #1a1a1a;
-            color: #e2e8f0;
+            transition: 0.3s;
         }
         
         .message-input:focus {
-            border-color: #9f7aea;
+            border-color: #764ba2;
             outline: none;
-            background: #1f1f1f;
-        }
-        
-        .message-input::placeholder {
-            color: #718096;
         }
         
         .send-btn {
             padding: 12px 25px;
-            background: #9f7aea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 25px;
             font-weight: bold;
             cursor: pointer;
-            transition: 0.2s;
+            transition: 0.3s;
         }
         
         .send-btn:hover {
-            background: #805ad5;
-            transform: scale(1.02);
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
         
         .notification-badge {
-            background: #fc8181;
+            background: #dc3545;
             color: white;
             border-radius: 50%;
             padding: 2px 6px;
@@ -242,32 +218,182 @@
             margin-left: 10px;
         }
         
-        /* СКРОЛЛ */
-        ::-webkit-scrollbar {
-            width: 8px;
+        .private-badge {
+            background: #ffc107;
+            color: #000;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 11px;
+            margin-left: 10px;
         }
-        
-        ::-webkit-scrollbar-track {
-            background: #0a0a0a;
+        /* ============ АДАПТИВНОСТЬ ============ */
+        @media screen and (max-width: 1200px) {
+            .chat-container {
+                width: 95%;
+                height: 95vh;
+                margin: 2.5vh auto;
+            }
         }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #2d2d2d;
-            border-radius: 4px;
+
+        @media screen and (max-width: 900px) {
+            .chat-container {
+                flex-direction: column;
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                margin: 0;
+            }
+            .sidebar {
+                width: 100%;
+                height: 40%;
+                border-right: none;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .main-chat {
+                width: 100%;
+                height: 60%;
+            }
+            .message-content {
+                max-width: 85%;
+            }
         }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #404040;
+
+        @media screen and (max-width: 600px) {
+            body { background: white; }
+            .chat-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+            .sidebar {
+                height: 45%;
+                padding: 10px;
+            }
+            .user-profile { padding: 15px; }
+            .user-name { font-size: 18px; }
+            .channels { padding: 15px; }
+            .channel {
+                padding: 12px;
+                font-size: 14px;
+            }
+            .main-chat { height: 55%; }
+            .chat-header {
+                padding: 15px;
+                font-size: 16px;
+            }
+            .chat-messages { padding: 15px; }
+            .message-content {
+                max-width: 90%;
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+            .message-time { font-size: 10px; }
+            .message-input-area { padding: 15px; }
+            .message-input {
+                padding: 10px;
+                font-size: 14px;
+            }
+            .send-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+            .typing-indicator {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+
+        @media screen and (max-width: 380px) {
+            .sidebar { height: 50%; }
+            .main-chat { height: 50%; }
+            .user-name { font-size: 16px; }
+            .logout-btn { font-size: 12px; }
+            .channel {
+                padding: 10px;
+                font-size: 13px;
+            }
+            .online-status {
+                width: 8px;
+                height: 8px;
+            }
+            .chat-header {
+                padding: 12px;
+                font-size: 15px;
+            }
+            .message-input-area {
+                padding: 12px;
+                gap: 8px;
+            }
+            .message-input {
+                padding: 8px 12px;
+            }
+            .send-btn {
+                padding: 8px 16px;
+            }
+            .notification-badge {
+                padding: 1px 5px;
+                font-size: 10px;
+            }
+        }
+
+        @media screen and (max-width: 900px) and (orientation: landscape) {
+            .chat-container {
+                flex-direction: row;
+            }
+            .sidebar {
+                width: 35%;
+                height: 100%;
+                border-bottom: none;
+                border-right: 1px solid #e0e0e0;
+            }
+            .main-chat {
+                width: 65%;
+                height: 100%;
+            }
+            .channels {
+                overflow-y: auto;
+                max-height: calc(100vh - 100px);
+            }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .channel:hover { background: inherit; }
+            .channel:active { background: #e9ecef; }
+            .send-btn:hover {
+                transform: none;
+                box-shadow: none;
+            }
+            .send-btn:active {
+                transform: scale(0.98);
+                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            }
+        }
+
+        @media screen and (min-width: 2000px) {
+            .chat-container {
+                width: 1600px;
+                height: 900px;
+            }
+            .sidebar { width: 400px; }
+            .message-content {
+                max-width: 60%;
+                font-size: 16px;
+            }
+            .chat-header {
+                font-size: 20px;
+                padding: 25px;
+            }
+            .message-input { font-size: 16px; }
         }
     </style>
 </head>
 <body>
     <div class="chat-container">
-        <!-- Сайдбар -->
         <div class="sidebar">
             <div class="user-profile">
-                <div class="user-name">👤 {{ username }}</div>
-                <a href="/logout" class="logout-btn">⏻ Выйти</a>
+                <div class="user-name">{{ username }}</div>
+                <a href="/logout" class="logout-btn">Выйти</a>
             </div>
             
             <div class="channels" id="channels">
@@ -276,8 +402,8 @@
                     Общий чат
                 </div>
                 
-                <div style="margin-top: 20px; margin-bottom: 10px; color: #a0aec0; font-size: 12px; padding-left: 15px;">
-                    📱 ЛИЧНЫЕ СООБЩЕНИЯ
+                <div style="margin-top: 20px; margin-bottom: 10px; color: #6c757d; font-size: 12px; padding-left: 15px;">
+                    ЛИЧНЫЕ СООБЩЕНИЯ
                 </div>
                 
                 <div id="usersList">
@@ -292,10 +418,9 @@
             </div>
         </div>
         
-        <!-- Чат -->
         <div class="main-chat">
             <div class="chat-header" id="chatHeader">
-                💬 Общий чат
+                Общий чат
             </div>
             
             <div class="chat-messages" id="chatMessages"></div>
@@ -305,7 +430,7 @@
             <div class="message-input-area">
                 <input type="text" class="message-input" id="messageInput" 
                        placeholder="Сообщение..." autocomplete="off">
-                <button class="send-btn" onclick="sendMessage()">➤</button>
+                <button class="send-btn" onclick="sendMessage()">Отправить</button>
             </div>
         </div>
     </div>
@@ -318,8 +443,14 @@
         let typingTimeout = null;
         let unreadMessages = {};
 
-        // ============ ИНИЦИАЛИЗАЦИЯ ============
-        
+        console.log('Connecting to WebSocket...');
+        socket.on('connect', function() {
+            console.log('✅ WebSocket connected!');
+        });
+        socket.on('connect_error', function(error) {
+            console.error('❌ WebSocket error:', error);
+        });
+
         fetch('/api/messages')
             .then(res => res.json())
             .then(messages => {
@@ -339,36 +470,13 @@
                 }
             });
 
-        // ============ КОНВЕРТАЦИЯ ВРЕМЕНИ ============
-        
-        function convertUTCtoLocal(utcTimeString) {
-            if (utcTimeString.length === 5 && utcTimeString.includes(':')) {
-                return utcTimeString;
-            }
-            
-            try {
-                const utcDate = new Date(utcTimeString + ' UTC');
-                if (isNaN(utcDate.getTime())) {
-                    return utcTimeString;
-                }
-                const localDate = new Date(utcDate.getTime());
-                const hours = localDate.getHours().toString().padStart(2, '0');
-                const minutes = localDate.getMinutes().toString().padStart(2, '0');
-                return `${hours}:${minutes}`;
-            } catch (e) {
-                return utcTimeString;
-            }
-        }
-
-        // ============ УПРАВЛЕНИЕ КАНАЛАМИ ============
-        
         function switchChannel(channel) {
             document.querySelectorAll('.channel').forEach(el => {
                 el.classList.remove('active');
             });
             
             if (channel === 'general') {
-                document.getElementById('chatHeader').innerHTML = '💬 Общий чат';
+                document.getElementById('chatHeader').innerHTML = 'Общий чат';
                 currentChannel = 'general';
                 currentUser = null;
                 
@@ -379,7 +487,7 @@
                         messages.forEach(msg => displayMessage(msg));
                     });
             } else {
-                document.getElementById('chatHeader').innerHTML = `💬 Личный чат с ${channel}`;
+                document.getElementById('chatHeader').innerHTML = `Личный чат с ${channel}`;
                 currentChannel = 'private';
                 currentUser = channel;
                 document.getElementById(`user-${channel}`).classList.add('active');
@@ -396,8 +504,6 @@
             }
         }
         
-        // ============ ОТПРАВКА СООБЩЕНИЙ ============
-        
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
@@ -406,30 +512,38 @@
             
             if (currentChannel === 'general') {
                 socket.emit('send_message', { text: text });
+                displayMessage({
+                    from: username,
+                    text: text,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                    date: new Date().toLocaleDateString()
+                });
             } else {
                 socket.emit('send_private', {
                     to: currentUser,
                     text: text
+                });
+                displayPrivateMessage({
+                    from: username,
+                    to: currentUser,
+                    text: text,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                 });
             }
             
             input.value = '';
         }
         
-        // ============ ОТОБРАЖЕНИЕ СООБЩЕНИЙ ============
-        
         function displayMessage(msg) {
             const messagesDiv = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
             
-            const localTime = convertUTCtoLocal(msg.time);
-            
             messageDiv.innerHTML = `
                 <div class="message-content">
                     ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
                     <div>${escapeHtml(msg.text)}</div>
-                    <div class="message-time">${localTime}</div>
+                    <div class="message-time">${msg.time}</div>
                 </div>
             `;
             
@@ -443,13 +557,11 @@
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
                 
-                const localTime = convertUTCtoLocal(msg.time);
-                
                 messageDiv.innerHTML = `
                     <div class="message-content">
                         ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
                         <div>${escapeHtml(msg.text)}</div>
-                        <div class="message-time">${localTime}</div>
+                        <div class="message-time">${msg.time}</div>
                     </div>
                 `;
                 
@@ -457,8 +569,6 @@
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
         }
-        
-        // ============ СОКЕТ СОБЫТИЯ ============
         
         socket.on('users_update', function(users) {
             const usersList = document.getElementById('usersList');
@@ -554,15 +664,11 @@
             }
         });
         
-        // ============ ХЕЛПЕРЫ ============
-        
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
-        
-        // ============ СОБЫТИЯ ВВОДА ============
         
         document.getElementById('messageInput').addEventListener('input', function() {
             clearTimeout(typingTimeout);
