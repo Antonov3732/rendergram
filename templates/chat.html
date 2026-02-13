@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -92,9 +91,67 @@
             cursor: pointer;
         }
 
+        /* ============ АВАТАРЫ ============ */
+        .avatar-container {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-bottom: 12px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+            border: 2px solid #2d2d2d;
+            transition: all 0.2s;
+        }
+
+        .avatar-container:hover {
+            border-color: #666;
+            transform: scale(1.05);
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: #1a1a1a;
+        }
+
+        .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            color: white;
+            font-size: 20px;
+        }
+
+        .avatar-container:hover .avatar-overlay {
+            opacity: 1;
+        }
+
+        .user-avatar-small {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 8px;
+            object-fit: cover;
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+        }
+
         .user {
             padding: 20px;
             border-bottom: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .user-name {
@@ -213,6 +270,15 @@
             color: #888;
             margin-bottom: 4px;
             padding-left: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .message-sender .user-avatar-small {
+            width: 16px;
+            height: 16px;
+            margin-right: 4px;
         }
 
         .message-bubble {
@@ -294,6 +360,138 @@
             font-style: italic;
         }
 
+        /* ============ МОДАЛЬНОЕ ОКНО ============ */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid #2d2d2d;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            animation: modalFadeIn 0.3s;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #2d2d2d;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fff;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .close {
+            color: #666;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close:hover {
+            color: #fff;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .avatar-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            overflow: hidden;
+            border: 3px solid #2d2d2d;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .upload-options {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .upload-btn {
+            flex: 1;
+            padding: 12px;
+            background: #2d2d2d;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+
+        .upload-btn:hover {
+            background: #3d3d3d;
+        }
+
+        .save-btn {
+            flex: 1;
+            padding: 12px;
+            background: #00a884;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .save-btn:hover {
+            background: #00c495;
+        }
+
+        .save-btn:disabled {
+            background: #2d2d2d;
+            cursor: not-allowed;
+        }
+
+        .upload-hint {
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -319,7 +517,6 @@
         }
     </style>
 </head>
-
 <body>
     <div class="app">
         <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
@@ -327,6 +524,12 @@
 
         <div class="sidebar" id="sidebar">
             <div class="user">
+                <div class="avatar-container" onclick="openAvatarModal()">
+                    <img id="userAvatar" class="avatar" src="" alt="avatar">
+                    <div class="avatar-overlay">
+                        <span>✎</span>
+                    </div>
+                </div>
                 <div class="user-name">{{ username }}</div>
                 <a href="/logout" class="logout">Выйти</a>
             </div>
@@ -341,10 +544,13 @@
 
                 <div id="usersList">
                     {% for user in users %}
-                    <div class="channel" id="user-{{ user }}" onclick="switchChannel('{{ user }}')">
-                        <span class="online-status offline" id="status-{{ user }}"></span>
-                        <span style="flex: 1;">{{ user }}</span>
-                        <span class="badge" id="notify-{{ user }}" style="display: none;"></span>
+                    <div class="channel" id="user-{{ user.username }}" onclick="switchChannel('{{ user.username }}')">
+                        <span class="online-status {% if user.online %}online{% else %}offline{% endif %}" 
+                              id="status-{{ user.username }}"></span>
+                        <img class="user-avatar-small" src="{{ user.avatar or '' }}" 
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
+                        <span style="flex: 1;">{{ user.username }}</span>
+                        <span class="badge" id="notify-{{ user.username }}" style="display: none;"></span>
                     </div>
                     {% endfor %}
                 </div>
@@ -369,6 +575,31 @@
         </div>
     </div>
 
+    <!-- Модальное окно для аватара -->
+    <div class="modal" id="avatarModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Изменить аватар</h3>
+                <span class="close" onclick="closeAvatarModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="avatar-preview" id="avatarPreview">
+                    <img id="previewImage" src="" alt="preview">
+                </div>
+                <div class="upload-options">
+                    <label for="avatarUpload" class="upload-btn">
+                        Выбрать файл
+                    </label>
+                    <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                    <button class="save-btn" onclick="uploadAvatar()" id="saveAvatarBtn">Сохранить</button>
+                </div>
+                <div class="upload-hint">
+                    PNG, JPG до 2MB
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const socket = io();
         const username = '{{ username }}';
@@ -377,9 +608,101 @@
         let typingTimeout = null;
         let unreadMessages = {};
         const displayedMessageIds = new Set();
+                // ============ ФУНКЦИИ ДЛЯ АВАТАРОВ ============
+        
+        function openAvatarModal() {
+            document.getElementById('avatarModal').classList.add('show');
+            // Загружаем текущий аватар в превью
+            const currentAvatar = document.getElementById('userAvatar').src;
+            document.getElementById('previewImage').src = currentAvatar;
+        }
+
+        function closeAvatarModal() {
+            document.getElementById('avatarModal').classList.remove('show');
+        }
+
+        // Обработка выбора файла
+        document.getElementById('avatarUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Проверка размера (2MB)
+            if (file.size > 2 * 1024 * 1024) {
+                alert('Файл слишком большой. Максимум 2MB');
+                return;
+            }
+
+            // Проверка типа
+            if (!file.type.startsWith('image/')) {
+                alert('Можно загружать только изображения');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImage').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        async function uploadAvatar() {
+            const preview = document.getElementById('previewImage');
+            const avatarData = preview.src;
+            
+            if (!avatarData || avatarData.includes('svg')) {
+                alert('Сначала выберите изображение');
+                return;
+            }
+
+            const btn = document.getElementById('saveAvatarBtn');
+            btn.disabled = true;
+            btn.textContent = 'Загрузка...';
+
+            try {
+                const response = await fetch('/api/avatar', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ avatar: avatarData })
+                });
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('userAvatar').src = avatarData;
+                    closeAvatarModal();
+                } else {
+                    alert('Ошибка загрузки аватара');
+                }
+            } catch (error) {
+                alert('Ошибка соединения');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Сохранить';
+            }
+        }
+
+        // Получение аватара пользователя
+        async function loadUserAvatar() {
+            try {
+                const response = await fetch(`/api/avatar/${username}`);
+                const data = await response.json();
+                if (data.avatar) {
+                    document.getElementById('userAvatar').src = data.avatar;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки аватара:', error);
+            }
+        }
+
         // ============ ЗАГРУЗКА ИСТОРИИ ПРИ СТАРТЕ ============
+        
         function loadHistory() {
             console.log('Загружаю историю сообщений...');
+            
+            // Загрузка аватара пользователя
+            loadUserAvatar();
             
             // Загрузка общего чата
             fetch('/api/messages')
@@ -491,8 +814,7 @@
 
             input.value = '';
         }
-
-        // ============ ОТОБРАЖЕНИЕ СООБЩЕНИЙ ============
+                // ============ ОТОБРАЖЕНИЕ СООБЩЕНИЙ ============
 
         function displayMessage(msg) {
             const messagesDiv = document.getElementById('chatMessages');
@@ -504,8 +826,26 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
 
+            // Получаем аватар отправителя
+            let senderAvatar = '';
+            if (msg.from !== username) {
+                const userElement = document.getElementById(`user-${msg.from}`);
+                if (userElement) {
+                    const avatarImg = userElement.querySelector('.user-avatar-small');
+                    if (avatarImg) {
+                        senderAvatar = avatarImg.src;
+                    }
+                }
+            }
+
             messageDiv.innerHTML = `
-                ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
+                ${msg.from !== username ? `
+                    <div class="message-sender">
+                        <img class="user-avatar-small" src="${senderAvatar}" 
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
+                        ${escapeHtml(msg.from)}
+                    </div>
+                ` : ''}
                 <div class="message-bubble">${escapeHtml(msg.text)}</div>
                 <div class="message-time">${msg.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
             `;
@@ -525,8 +865,26 @@
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
 
+                // Получаем аватар отправителя
+                let senderAvatar = '';
+                if (msg.from !== username) {
+                    const userElement = document.getElementById(`user-${msg.from}`);
+                    if (userElement) {
+                        const avatarImg = userElement.querySelector('.user-avatar-small');
+                        if (avatarImg) {
+                            senderAvatar = avatarImg.src;
+                        }
+                    }
+                }
+
                 messageDiv.innerHTML = `
-                    ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
+                    ${msg.from !== username ? `
+                        <div class="message-sender">
+                            <img class="user-avatar-small" src="${senderAvatar}" 
+                                 onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
+                            ${escapeHtml(msg.from)}
+                        </div>
+                    ` : ''}
                     <div class="message-bubble">${escapeHtml(msg.text)}</div>
                     <div class="message-time">${msg.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                 `;
@@ -535,6 +893,7 @@
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
         }
+
         // ============ СОКЕТ-СОБЫТИЯ ============
 
         socket.on('new_message', function(msg) {
@@ -560,6 +919,24 @@
             }
         });
 
+        socket.on('avatar_update', function(data) {
+            // Обновляем аватар в списке пользователей
+            const userElement = document.getElementById(`user-${data.username}`);
+            if (userElement) {
+                const avatarImg = userElement.querySelector('.user-avatar-small');
+                if (avatarImg) {
+                    avatarImg.src = data.avatar;
+                }
+            }
+            
+            // Обновляем аватар в сообщениях (перезагружаем историю?)
+            if (currentChannel === 'general') {
+                // Можно перезагрузить историю или просто обновить отображение
+                // Для простоты - перезагружаем текущий канал
+                switchChannel(currentChannel);
+            }
+        });
+
         socket.on('users_update', function(users) {
             const usersList = document.getElementById('usersList');
             usersList.innerHTML = '';
@@ -573,6 +950,8 @@
                     div.innerHTML = `
                         <span class="online-status ${user.online ? 'online' : 'offline'}" 
                               id="status-${user.username}"></span>
+                        <img class="user-avatar-small" src="${user.avatar || ''}" 
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
                         <span style="flex: 1;">${user.username}</span>
                         <span class="badge" id="notify-${user.username}" 
                               style="display: ${unreadMessages[user.username] ? 'inline' : 'none'};">
@@ -683,45 +1062,4 @@
             const sidebar = document.getElementById('sidebar');
             const overlay = document.querySelector('.overlay');
 
-            if (touchStartX < 30 && touchEndX > 100) {
-                sidebar.classList.add('open');
-                overlay.classList.add('show');
-            }
-
-            if (touchStartX > 100 && touchEndX < 30) {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('show');
-            }
-        });
-
-        // ============ ФОКУС ДЛЯ МОБИЛОК ============
-
-        document.getElementById('messageInput').addEventListener('focus', function() {
-            if (window.innerWidth <= 768) {
-                setTimeout(() => {
-                    window.scrollTo(0, document.body.scrollHeight);
-                }, 300);
-            }
-        });
-
-        // ============ ПРОВЕРКА ПОДКЛЮЧЕНИЯ ============
-
-        socket.on('connect', function() {
-            console.log('WebSocket подключен');
-        });
-
-        socket.on('connect_error', function(error) {
-            console.error('WebSocket ошибка:', error);
-        });
-
-        socket.on('disconnect', function() {
-            console.log('WebSocket отключен');
-        });
-
-        // ============ ИНИЦИАЛИЗАЦИЯ ============
-
-        console.log('Чат загружен, пользователь:', username);
-        console.log('Текущий канал:', currentChannel);
-    </script>
-</body>
-</html>
+            if (touchStartX < 30 && touchEndX >
