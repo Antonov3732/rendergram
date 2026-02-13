@@ -2,17 +2,15 @@ import sqlite3
 from datetime import datetime, timezone
 import os
 
-# ✅ ФИНАЛЬНОЕ РЕШЕНИЕ ДЛЯ RENDER
+# Определяем путь к БД
 if os.environ.get('RENDER'):
-    # Используем persistent disk
-    DB_PATH = '/opt/render/project/data/eptagram.db'
-    # Создаем папку если её нет
-    os.makedirs('/opt/render/project/data', exist_ok=True)
+    DB_PATH = '/tmp/eptagram.db'  # Для Render используем /tmp/
+    print(f"🎯 Render режим: БД в /tmp/")
 else:
-    DB_PATH = 'eptagram.db'
+    DB_PATH = 'eptagram.db'  # Локально
+    print(f"💻 Локальный режим: БД в текущей папке")
 
-print(f"🔥 БАЗА ДАННЫХ: {DB_PATH}")
-print(f"📁 Папка существует? {os.path.exists(os.path.dirname(DB_PATH))}")
+print(f"📁 База данных: {DB_PATH}")
 
 def init_db():
     """Создает таблицы при первом запуске"""
@@ -45,16 +43,89 @@ def init_db():
         conn.commit()
         conn.close()
         print("✅ База данных инициализирована")
-        print(f"💾 Файл БД: {DB_PATH}")
-        print(f"📁 Файл существует? {os.path.exists(DB_PATH)}")
         return True
     except Exception as e:
         print(f"❌ Ошибка инициализации БД: {e}")
         return False
 
+# ============ ПОЛЬЗОВАТЕЛИ ============
+
+def add_user(username):
+    """Добавляет нового пользователя"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        c.execute('INSERT INTO users (username, registered, last_seen) VALUES (?, ?, ?)',
+                 (username, now, now))
+        conn.commit()
+        conn.close()
+        print(f"👤 Пользователь {username} добавлен")
+        return True
+    except sqlite3.IntegrityError:
+        print(f"⚠️ Пользователь {username} уже существует")
+        return False
+    except Exception as e:
+        print(f"❌ Ошибка добавления пользователя: {e}")
+        return False
+
+def remove_user(username):
+    """Удаляет пользователя"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('DELETE FROM users WHERE username = ?', (username,))
+        conn.commit()
+        conn.close()
+        print(f"👤 Пользователь {username} удален")
+    except Exception as e:
+        print(f"❌ Ошибка удаления пользователя: {e}")
+
+def set_user_online(username, online=True):
+    """Обновляет статус пользователя"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        c.execute('UPDATE users SET online = ?, last_seen = ? WHERE username = ?',
+                 (1 if online else 0, now, username))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"❌ Ошибка обновления статуса: {e}")
+
+def get_all_users():
+    """Возвращает список всех пользователей"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('SELECT username, online FROM users ORDER BY username')
+        rows = c.fetchall()
+        conn.close()
+        users = [{'username': row[0], 'online': bool(row[1])} for row in rows]
+        print(f"📋 Загружено {len(users)} пользователей")
+        return users
+    except Exception as e:
+        print(f"❌ Ошибка загрузки пользователей: {e}")
+        return []
+
+def get_user_status(username):
+    """Проверяет статус пользователя"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('SELECT online FROM users WHERE username = ?', (username,))
+        result = c.fetchone()
+        conn.close()
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Ошибка проверки статуса: {e}")
+        return None
+
 # ============ ОБЩИЙ ЧАТ ============
 
 def save_general_message(username, text):
+    """Сохраняет сообщение в общий чат"""
     try:
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
@@ -67,8 +138,7 @@ def save_general_message(username, text):
         conn.commit()
         conn.close()
         
-        print(f"✅ СОХРАНЕНО! ID: {message_id}, Текст: {text[:20]}")
-        print(f"💾 БД: {DB_PATH}, размер: {os.path.getsize(DB_PATH) if os.path.exists(DB_PATH) else 0} байт")
+        print(f"✅ Сообщение сохранено! ID: {message_id}, от: {username}")
         
         return {
             'id': message_id,
@@ -78,10 +148,11 @@ def save_general_message(username, text):
             'date': now_date
         }
     except Exception as e:
-        print(f"❌ ОШИБКА СОХРАНЕНИЯ: {e}")
+        print(f"❌ Ошибка сохранения сообщения: {e}")
         return None
 
 def get_general_messages(limit=50):
+    """Получает последние сообщения из общего чата"""
     try:
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
@@ -100,15 +171,16 @@ def get_general_messages(limit=50):
                 'time': row[3],
                 'date': row[4]
             })
-        print(f"📖 ЗАГРУЖЕНО {len(messages)} сообщений")
+        print(f"📖 Загружено {len(messages)} сообщений из общего чата")
         return messages
     except Exception as e:
-        print(f"❌ ОШИБКА ЗАГРУЗКИ: {e}")
+        print(f"❌ Ошибка загрузки сообщений: {e}")
         return []
 
 # ============ ЛИЧНЫЕ СООБЩЕНИЯ ============
 
 def save_private_message(from_user, to_user, text):
+    """Сохраняет личное сообщение"""
     try:
         conn = sqlite3.connect(DB_PATH)
         c = conn.cursor()
@@ -121,7 +193,7 @@ def save_private_message(from_user, to_user, text):
         conn.commit()
         conn.close()
         
-        print(f"✅ ЛИЧНОЕ СОХРАНЕНО! ID: {message_id}")
+        print(f"✅ Личное сообщение сохранено! ID: {message_id}, от: {from_user} -> {to_user}")
         
         return {
             'id': message_id,
@@ -132,9 +204,68 @@ def save_private_message(from_user, to_user, text):
             'date': now_date
         }
     except Exception as e:
-        print(f"❌ ОШИБКА СОХРАНЕНИЯ ЛИЧНОГО: {e}")
+        print(f"❌ Ошибка сохранения личного сообщения: {e}")
         return None
 
-# ... остальные функции без изменений ...
+def get_private_messages(user1, user2, limit=50):
+    """Получает переписку между двумя пользователями"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('''SELECT id, from_user, to_user, text, time, date 
+                     FROM private_messages 
+                     WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?)
+                     ORDER BY id DESC LIMIT ?''', (user1, user2, user2, user1, limit))
+        rows = c.fetchall()
+        conn.close()
+        
+        messages = []
+        for row in reversed(rows):
+            messages.append({
+                'id': row[0],
+                'from': row[1],
+                'to': row[2],
+                'text': row[3],
+                'time': row[4],
+                'date': row[5]
+            })
+        print(f"📖 Загружено {len(messages)} личных сообщений между {user1} и {user2}")
+        return messages
+    except Exception as e:
+        print(f"❌ Ошибка загрузки личных сообщений: {e}")
+        return []
 
+def mark_private_as_read(from_user, to_user):
+    """Отмечает сообщения как прочитанные"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('''UPDATE private_messages 
+                     SET is_read = 1 
+                     WHERE from_user = ? AND to_user = ?''', (from_user, to_user))
+        conn.commit()
+        conn.close()
+        print(f"📨 Сообщения от {from_user} для {to_user} отмечены как прочитанные")
+    except Exception as e:
+        print(f"❌ Ошибка отметки прочитанных: {e}")
+
+def get_unread_count(username):
+    """Сколько непрочитанных сообщений у пользователя"""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('''SELECT from_user, COUNT(*) 
+                     FROM private_messages 
+                     WHERE to_user = ? AND is_read = 0
+                     GROUP BY from_user''', (username,))
+        rows = c.fetchall()
+        conn.close()
+        result = {row[0]: row[1] for row in rows}
+        print(f"📨 Непрочитанные для {username}: {result}")
+        return result
+    except Exception as e:
+        print(f"❌ Ошибка загрузки непрочитанных: {e}")
+        return {}
+
+# Инициализируем БД при загрузке
 init_db()
