@@ -527,33 +527,24 @@
         }
         
         function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const text = input.value.trim();
-            
-            if (!text) return;
-            
-            if (currentChannel === 'general') {
-                socket.emit('send_message', { text: text });
-                displayMessage({
-                    from: username,
-                    text: text,
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                });
-            } else {
-                socket.emit('send_private', {
-                    to: currentUser,
-                    text: text
-                });
-                displayPrivateMessage({
-                    from: username,
-                    to: currentUser,
-                    text: text,
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                });
-            }
-            
-            input.value = '';
-        }
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+    
+    if (!text) return;
+    
+    if (currentChannel === 'general') {
+        socket.emit('send_message', { text: text });
+        // ❌ УДАЛИ displayMessage() - сообщение придет через socket.on('new_message')
+    } else {
+        socket.emit('send_private', {
+            to: currentUser,
+            text: text
+        });
+        // ❌ УДАЛИ displayPrivateMessage() - сообщение придет через socket.on('new_private')
+    }
+    
+    input.value = '';
+}
         
         function displayMessage(msg) {
             const messagesDiv = document.getElementById('chatMessages');
