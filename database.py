@@ -21,6 +21,8 @@ def init_db():
                 username TEXT PRIMARY KEY,
                 password TEXT NOT NULL,
                 avatar TEXT,
+                bg_image TEXT,
+                bg_pattern TEXT DEFAULT 'default',
                 online INTEGER DEFAULT 0,
                 last_seen TEXT,
                 registered TEXT
@@ -157,6 +159,58 @@ def get_avatar(username):
         print(f"❌ Ошибка получения аватара: {e}")
         return None
 
+def update_bg_image(username, image_base64):
+    """Обновляет фоновое изображение пользователя"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('UPDATE users SET bg_image = %s WHERE username = %s', (image_base64, username))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка обновления фона: {e}")
+        return False
+
+def get_bg_image(username):
+    """Получает фоновое изображение пользователя"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT bg_image FROM users WHERE username = %s', (username,))
+        result = cur.fetchone()
+        conn.close()
+        return result['bg_image'] if result else None
+    except Exception as e:
+        print(f"❌ Ошибка получения фона: {e}")
+        return None
+
+def update_bg_pattern(username, pattern):
+    """Обновляет паттерн фона пользователя"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('UPDATE users SET bg_pattern = %s WHERE username = %s', (pattern, username))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка обновления паттерна: {e}")
+        return False
+
+def get_bg_pattern(username):
+    """Получает паттерн фона пользователя"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT bg_pattern FROM users WHERE username = %s', (username,))
+        result = cur.fetchone()
+        conn.close()
+        return result['bg_pattern'] if result else 'default'
+    except Exception as e:
+        print(f"❌ Ошибка получения паттерна: {e}")
+        return 'default'
+
 def set_user_online(username, online=True):
     try:
         conn = get_db()
@@ -222,14 +276,14 @@ def get_general_messages(limit=50, offset=0):
         conn = get_db()
         cur = conn.cursor()
         cur.execute(
-            'SELECT id, username, text, time, date FROM general_messages ORDER BY id DESC LIMIT %s OFFSET %s',
+            'SELECT id, username, text, time, date FROM general_messages ORDER BY id ASC LIMIT %s OFFSET %s',
             (limit, offset)
         )
         rows = cur.fetchall()
         conn.close()
         
         messages = []
-        for row in reversed(rows):
+        for row in rows:
             messages.append({
                 'id': row['id'],
                 'from': row['username'],
@@ -286,14 +340,14 @@ def get_private_messages(user1, user2, limit=50, offset=0):
             '''SELECT id, from_user, to_user, text, time, date 
                FROM private_messages 
                WHERE (from_user = %s AND to_user = %s) OR (from_user = %s AND to_user = %s)
-               ORDER BY id DESC LIMIT %s OFFSET %s''',
+               ORDER BY id ASC LIMIT %s OFFSET %s''',
             (user1, user2, user2, user1, limit, offset)
         )
         rows = cur.fetchall()
         conn.close()
         
         messages = []
-        for row in reversed(rows):
+        for row in rows:
             messages.append({
                 'id': row['id'],
                 'from': row['from_user'],
