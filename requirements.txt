@@ -4,6 +4,5 @@ python-socketio==5.9.0
 gunicorn==21.2.0
 gevent==23.9.1
 gevent-websocket==0.10.1
-setuptools==69.0.3
-pytz==2025.1
 psycopg2-binary==2.9.9
+setuptools==69.0.3
