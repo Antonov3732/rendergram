@@ -5,294 +5,76 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>EptaGram - Вход</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        body {
-            background: #000;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-
-        .login-box {
-            background: #0a0a0a;
-            border: 1px solid #1a1a1a;
-            border-radius: 16px;
-            padding: 32px 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        .logo h1 {
-            color: #fff;
-            font-size: clamp(28px, 6vw, 36px);
-            font-weight: 600;
-            letter-spacing: -0.5px;
-        }
-
-        .logo span {
-            color: #666;
-            font-size: clamp(12px, 3vw, 14px);
-            display: block;
-            margin-top: 8px;
-        }
-
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-group label {
-            display: block;
-            color: #888;
-            font-size: clamp(12px, 3vw, 14px);
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: clamp(12px, 3vw, 16px) clamp(14px, 3.5vw, 18px);
-            background: #1a1a1a;
-            border: 1px solid #2d2d2d;
-            border-radius: 12px;
-            color: #fff;
-            font-size: clamp(14px, 3.8vw, 16px);
-            outline: none;
-            transition: all 0.2s;
-        }
-
-        .form-group input:focus {
-            border-color: #666;
-            background: #222;
-        }
-
-        .form-group input::placeholder {
-            color: #444;
-            font-size: clamp(13px, 3.5vw, 14px);
-        }
-
-        .login-btn {
-            width: 100%;
-            padding: clamp(12px, 3vw, 16px);
-            background: #2d2d2d;
-            border: none;
-            border-radius: 12px;
-            color: #fff;
-            font-size: clamp(15px, 4vw, 17px);
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
-            margin-bottom: 16px;
-        }
-
-        .login-btn:hover {
-            background: #3d3d3d;
-        }
-
-        .login-btn:active {
-            transform: scale(0.98);
-        }
-
-        .info-text {
-            text-align: center;
-            color: #666;
-            font-size: clamp(11px, 2.8vw, 13px);
-            line-height: 1.5;
-        }
-
-        .info-text a {
-            color: #888;
-            text-decoration: none;
-            border-bottom: 1px dashed #444;
-        }
-
-        .info-text a:hover {
-            color: #fff;
-            border-bottom-color: #666;
-        }
-
-        .error-message {
-            background: #330000;
-            border: 1px solid #660000;
-            color: #ff6666;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: clamp(13px, 3.2vw, 14px);
-            display: none;
-        }
-
-        .error-message.show {
-            display: block;
-        }
-
-        .footer {
-            margin-top: 24px;
-            text-align: center;
-            color: #444;
-            font-size: clamp(10px, 2.5vw, 12px);
-        }
-
-        /* Анимация загрузки */
-        .loading {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #666;
-            border-top-color: #fff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 8px;
-            vertical-align: middle;
-            display: none;
-        }
-
-        .loading.show {
-            display: inline-block;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Адаптивность */
-        @media (max-width: 480px) {
-            .login-box {
-                padding: 24px 16px;
-            }
-        }
-
-        @media (max-width: 360px) {
-            .login-box {
-                padding: 20px 12px;
-            }
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #0a0a0a;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #2d2d2d;
-            border-radius: 3px;
-        }
+        /* ТОЧНО ТАКИЕ ЖЕ СТИЛИ КАК В register.html */
+        /* (скопируй стили из register.html сюда) */
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-box">
+    <div class="register-container">
+        <div class="register-box">
             <div class="logo">
                 <h1>EptaGram</h1>
-                <span>мессенджер для своих</span>
+                <span>вход в мессенджер</span>
             </div>
 
-            <!-- Контейнер для ошибок -->
             <div class="error-message" id="errorMessage"></div>
 
             <form method="post" action="/login" id="loginForm">
                 <div class="form-group">
-                    <label for="username">Ваш никнейм</label>
+                    <label for="username">Ваш ник</label>
                     <input 
                         type="text" 
                         id="username" 
                         name="username" 
-                        placeholder="например: Иван" 
+                        placeholder="введите ник" 
                         autocomplete="off"
-                        maxlength="30"
                         required
                         autofocus
                     >
                 </div>
 
-                <button type="submit" class="login-btn" id="submitBtn">
-                    <span>Войти в чат</span>
-                    <span class="loading" id="loading"></span>
+                <div class="form-group">
+                    <label for="password">Пароль</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="введите пароль"
+                        required
+                    >
+                </div>
+
+                <button type="submit" class="register-btn" id="submitBtn">
+                    <span>Войти</span>
                 </button>
 
-                <div class="info-text">
-                    Придумайте любой ник — <br>регистрация не нужна
+                <div class="login-link">
+                    Нет аккаунта? <a href="/register">Создать</a>
                 </div>
             </form>
-
-            <div class="footer">
-                © 2026 EptaGram
-            </div>
         </div>
     </div>
 
     <script>
-        // Получаем элементы
         const form = document.getElementById('loginForm');
-        const usernameInput = document.getElementById('username');
-        const submitBtn = document.getElementById('submitBtn');
-        const loading = document.getElementById('loading');
         const errorMessage = document.getElementById('errorMessage');
 
-        // Очищаем ник от лишних пробелов при потере фокуса
-        usernameInput.addEventListener('blur', function() {
-            this.value = this.value.trim();
-        });
+        function showError(text) {
+            errorMessage.textContent = text;
+            errorMessage.classList.add('show');
+        }
 
-        // Защита от слишком длинных ников
-        usernameInput.addEventListener('input', function() {
-            if (this.value.length > 30) {
-                this.value = this.value.slice(0, 30);
-            }
-        });
-
-        // Обработка отправки формы
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const username = usernameInput.value.trim();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
 
-            // Валидация
-            if (!username) {
-                showError('Ник не может быть пустым');
+            if (!username || !password) {
+                showError('Заполните все поля');
                 return;
             }
 
-            if (username.length < 2) {
-                showError('Ник должен быть хотя бы 2 символа');
-                return;
-            }
-
-            if (username.length > 30) {
-                showError('Ник слишком длинный (максимум 30 символов)');
-                return;
-            }
-
-            // Проверка на допустимые символы (буквы, цифры, подчеркивание)
-            const validUsername = /^[a-zA-Z0-9а-яА-Я_]+$/.test(username);
-            if (!validUsername) {
-                showError('Ник может содержать только буквы, цифры и _');
-                return;
-            }
-
-            // Показываем загрузку
-            setLoading(true);
-            hideError();
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
@@ -300,281 +82,28 @@
                         'Content-Type': 'application/x-www-form-urlencoded',
                     },
                     body: new URLSearchParams({
-                        'username': username
+                        'username': username,
+                        'password': password
                     })
                 });
 
                 const text = await response.text();
 
-                // Если ответ содержит HTML - перенаправляем
                 if (response.redirected) {
                     window.location.href = response.url;
                     return;
                 }
 
-                // Если ответ содержит тег <a> (ссылка "Попробовать другой")
-                if (text.includes('<a href="/">')) {
-                    showError('Этот ник уже занят! Попробуйте другой');
-                    setLoading(false);
-                    return;
-                }
-
-                // Если ответ содержит сообщение об ошибке
-                if (text.includes('Ник не может быть пустым')) {
-                    showError('Ник не может быть пустым');
-                    setLoading(false);
-                    return;
-                }
-
-                // Если всё ок - перенаправляем вручную
-                if (response.url.includes('/chat')) {
-                    window.location.href = '/chat';
+                if (text.includes('Неверный ник или пароль')) {
+                    showError('Неверный ник или пароль');
                 } else {
-                    // Проверяем, не ошибка ли это
-                    console.log('Ответ:', text);
-                    showError('Произошла ошибка. Попробуйте еще раз');
-                    setLoading(false);
+                    showError('Ошибка входа');
                 }
 
             } catch (error) {
-                console.error('Ошибка:', error);
-                showError('Ошибка соединения. Проверьте интернет');
-                setLoading(false);
+                showError('Ошибка соединения');
             }
         });
-
-        // Функция показа ошибки
-        function showError(text) {
-            errorMessage.textContent = text;
-            errorMessage.classList.add('show');
-            
-            // Автоматически скрываем через 5 секунд
-            setTimeout(() => {
-                errorMessage.classList.remove('show');
-            }, 5000);
-        }
-
-        // Функция скрытия ошибки
-        function hideError() {
-            errorMessage.classList.remove('show');
-            errorMessage.textContent = '';
-        }
-
-        // Функция управления загрузкой
-        function setLoading(isLoading) {
-            if (isLoading) {
-                submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.7';
-                submitBtn.style.cursor = 'not-allowed';
-                loading.classList.add('show');
-                usernameInput.disabled = true;
-            } else {
-                submitBtn.disabled = false;
-                submitBtn.style.opacity = '1';
-                submitBtn.style.cursor = 'pointer';
-                loading.classList.remove('show');
-                usernameInput.disabled = false;
-                usernameInput.focus();
-            }
-        }
-
-        // Обработка клавиши Enter (уже в форме)
-        usernameInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                form.dispatchEvent(new Event('submit'));
-            }
-        });
-
-        // Автофокус при загрузке
-        window.addEventListener('load', function() {
-            usernameInput.focus();
-        });
-
-        // Анимация появления
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelector('.login-box').style.animation = 'fadeIn 0.5s ease';
-        });
-        // Добавляем стили для анимации
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-
-            .login-box {
-                animation: fadeIn 0.5s ease;
-            }
-
-            /* Стили для уведомлений */
-            .notification {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: #1a1a1a;
-                border-left: 4px solid #ff4444;
-                color: #fff;
-                padding: 12px 20px;
-                border-radius: 8px;
-                font-size: 14px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                z-index: 1000;
-                animation: slideIn 0.3s ease;
-                max-width: 300px;
-            }
-
-            @keyframes slideIn {
-                from {
-                    transform: translateX(100%);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-
-            .notification.success {
-                border-left-color: #00ff88;
-            }
-
-            .notification.warning {
-                border-left-color: #ffaa00;
-            }
-
-            .notification.fadeout {
-                animation: fadeOut 0.3s ease forwards;
-            }
-
-            @keyframes fadeOut {
-                to {
-                    opacity: 0;
-                    transform: translateX(100%);
-                }
-            }
-
-            /* Дополнительные стили для интерактивности */
-            .login-box {
-                transition: transform 0.2s;
-            }
-
-            .login-box:hover {
-                transform: translateY(-2px);
-            }
-
-            .form-group input {
-                transition: all 0.3s;
-            }
-
-            .form-group input:focus {
-                transform: scale(1.02);
-                box-shadow: 0 0 20px rgba(255,255,255,0.1);
-            }
-
-            .login-btn {
-                position: relative;
-                overflow: hidden;
-            }
-
-            .login-btn::after {
-                content: '';
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                width: 0;
-                height: 0;
-                border-radius: 50%;
-                background: rgba(255,255,255,0.1);
-                transform: translate(-50%, -50%);
-                transition: width 0.3s, height 0.3s;
-            }
-
-            .login-btn:active::after {
-                width: 200px;
-                height: 200px;
-            }
-
-            /* Адаптация для очень маленьких экранов */
-            @media (max-width: 360px) {
-                .login-box {
-                    padding: 20px 12px;
-                }
-                
-                .logo h1 {
-                    font-size: 28px;
-                }
-                
-                .form-group input {
-                    padding: 10px 12px;
-                }
-                
-                .login-btn {
-                    padding: 10px;
-                }
-            }
-
-            /* Для устройств с повышенной контрастностью */
-            @media (prefers-contrast: high) {
-                .login-box {
-                    border: 2px solid #fff;
-                }
-                
-                .form-group input {
-                    border: 2px solid #fff;
-                }
-                
-                .login-btn {
-                    border: 2px solid #fff;
-                }
-            }
-
-            /* Для устройств с reduced motion */
-            @media (prefers-reduced-motion: reduce) {
-                * {
-                    animation-duration: 0.01ms !important;
-                    animation-iteration-count: 1 !important;
-                    transition-duration: 0.01ms !important;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-
-        // Функция для создания уведомлений (опционально)
-        window.showNotification = function(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-
-            setTimeout(() => {
-                notification.classList.add('fadeout');
-                setTimeout(() => {
-                    notification.remove();
-                }, 300);
-            }, 3000);
-        };
-
-        // Сохраняем ник в localStorage при успешном входе (опционально)
-        const savedUsername = localStorage.getItem('lastUsername');
-        if (savedUsername) {
-            usernameInput.value = savedUsername;
-        }
-
-        // При успешном входе сохраняем ник
-        form.addEventListener('submit', function() {
-            const username = usernameInput.value.trim();
-            if (username) {
-                localStorage.setItem('lastUsername', username);
-            }
-        });
-
-        console.log('Страница входа загружена');
     </script>
 </body>
 </html>
