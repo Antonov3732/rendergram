@@ -1,210 +1,241 @@
 import sqlite3
 from datetime import datetime
+import pytz
 import os
 
-# ============ ПУТЬ К БАЗЕ ДАННЫХ ============
-# Для Render используем абсолютный путь
-DB_PATH = os.path.join(os.path.dirname(__file__), 'eptagram.db')
+# ✅ ВАЖНО! На Render используем /tmp/ для сохранения файлов между рестартами
+if os.environ.get('RENDER'):
+    DB_PATH = '/tmp/eptagram.db'
+    print(f"🎯 Render режим: БД в /tmp/")
+else:
+    DB_PATH = 'eptagram.db'
+    print(f"💻 Локальный режим: БД в текущей папке")
+
+print(f"📁 База данных: {DB_PATH}")
 
 def init_db():
-    """Создает все таблицы при первом запуске"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    
-    # Таблица пользователей
-    c.execute('''CREATE TABLE IF NOT EXISTS users
-                 (username TEXT PRIMARY KEY,
-                  online BOOLEAN DEFAULT 0,
-                  last_seen TEXT,
-                  registered TEXT)''')
-    
-    # Таблица общего чата
-    c.execute('''CREATE TABLE IF NOT EXISTS general_messages
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  username TEXT,
-                  text TEXT,
-                  time TEXT,
-                  date TEXT)''')
-    
-    # Таблица личных сообщений
-    c.execute('''CREATE TABLE IF NOT EXISTS private_messages
-                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
-                  from_user TEXT,
-                  to_user TEXT,
-                  text TEXT,
-                  time TEXT,
-                  date TEXT,
-                  is_read BOOLEAN DEFAULT 0)''')
-    
-    conn.commit()
-    conn.close()
-    print("✅ База данных инициализирована")
-
-# ============ ПОЛЬЗОВАТЕЛИ ============
-
-def add_user(username):
-    """Добавляет нового пользователя"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    """Создает таблицы при первом запуске"""
     try:
-        c.execute('INSERT INTO users (username, registered, last_seen) VALUES (?, ?, ?)',
-                 (username, now, now))
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        
+        c.execute('''CREATE TABLE IF NOT EXISTS users
+                     (username TEXT PRIMARY KEY,
+                      online INTEGER DEFAULT 0,
+                      last_seen TEXT,
+                      registered TEXT)''')
+        
+        c.execute('''CREATE TABLE IF NOT EXISTS general_messages
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      username TEXT,
+                      text TEXT,
+                      time TEXT,
+                      date TEXT)''')
+        
+        c.execute('''CREATE TABLE IF NOT EXISTS private_messages
+                     (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                      from_user TEXT,
+                      to_user TEXT,
+                      text TEXT,
+                      time TEXT,
+                      date TEXT,
+                      is_read INTEGER DEFAULT 0)''')
+        
         conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
-    finally:
         conn.close()
-
-def remove_user(username):
-    """Удаляет пользователя (при выходе)"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('DELETE FROM users WHERE username = ?', (username,))
-    conn.commit()
-    conn.close()
-
-def set_user_online(username, online=True):
-    """Обновляет статус пользователя"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    c.execute('UPDATE users SET online = ?, last_seen = ? WHERE username = ?',
-             (1 if online else 0, now, username))
-    conn.commit()
-    conn.close()
-
-def get_all_users():
-    """Возвращает список всех пользователей"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('SELECT username, online FROM users ORDER BY username')
-    users = [{'username': row[0], 'online': bool(row[1])} for row in c.fetchall()]
-    conn.close()
-    return users
-
-def get_user_status(username):
-    """Проверяет, существует ли пользователь"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('SELECT online FROM users WHERE username = ?', (username,))
-    result = c.fetchone()
-    conn.close()
-    return result[0] if result else None
+        print("✅ База данных инициализирована")
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка инициализации БД: {e}")
+        return False
 
 # ============ ОБЩИЙ ЧАТ ============
 
 def save_general_message(username, text):
-    """Сохраняет сообщение в общий чат"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    now_time = datetime.now().strftime('%H:%M')
-    now_date = datetime.now().strftime('%d.%m.%Y')
-    c.execute('''INSERT INTO general_messages (username, text, time, date)
-                 VALUES (?, ?, ?, ?)''', (username, text, now_time, now_date))
-    message_id = c.lastrowid
-    conn.commit()
-    conn.close()
-    
-    return {
-        'id': message_id,
-        'from': username,
-        'text': text,
-        'time': now_time,
-        'date': now_date
-    }
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        now_time = datetime.now(pytz.UTC).strftime('%H:%M')
+        now_date = datetime.now(pytz.UTC).strftime('%d.%m.%Y')
+        
+        c.execute('''INSERT INTO general_messages (username, text, time, date)
+                     VALUES (?, ?, ?, ?)''', (username, text, now_time, now_date))
+        message_id = c.lastrowid
+        conn.commit()
+        conn.close()
+        
+        print(f"✅ Сообщение сохранено! ID: {message_id}")
+        
+        return {
+            'id': message_id,
+            'from': username,
+            'text': text,
+            'time': now_time,
+            'date': now_date
+        }
+    except Exception as e:
+        print(f"❌ Ошибка сохранения: {e}")
+        return None
 
 def get_general_messages(limit=50):
-    """Получает последние сообщения из общего чата"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''SELECT id, username, text, time, date 
-                 FROM general_messages 
-                 ORDER BY id DESC LIMIT ?''', (limit,))
-    messages = []
-    for row in reversed(list(c.fetchall())):
-        messages.append({
-            'id': row[0],
-            'from': row[1],
-            'text': row[2],
-            'time': row[3],
-            'date': row[4]
-        })
-    conn.close()
-    return messages
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('''SELECT id, username, text, time, date 
+                     FROM general_messages 
+                     ORDER BY id DESC LIMIT ?''', (limit,))
+        rows = c.fetchall()
+        conn.close()
+        
+        messages = []
+        for row in reversed(rows):
+            messages.append({
+                'id': row[0],
+                'from': row[1],
+                'text': row[2],
+                'time': row[3],
+                'date': row[4]
+            })
+        print(f"📖 Загружено {len(messages)} сообщений")
+        return messages
+    except Exception as e:
+        print(f"❌ Ошибка загрузки: {e}")
+        return []
 
 # ============ ЛИЧНЫЕ СООБЩЕНИЯ ============
 
 def save_private_message(from_user, to_user, text):
-    """Сохраняет личное сообщение"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    now_time = datetime.now().strftime('%H:%M')
-    now_date = datetime.now().strftime('%d.%m.%Y')
-    c.execute('''INSERT INTO private_messages (from_user, to_user, text, time, date, is_read)
-                 VALUES (?, ?, ?, ?, ?, 0)''', (from_user, to_user, text, now_time, now_date))
-    message_id = c.lastrowid
-    conn.commit()
-    conn.close()
-    
-    return {
-        'id': message_id,
-        'from': from_user,
-        'to': to_user,
-        'text': text,
-        'time': now_time,
-        'date': now_date
-    }
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        now_time = datetime.now(pytz.UTC).strftime('%H:%M')
+        now_date = datetime.now(pytz.UTC).strftime('%d.%m.%Y')
+        
+        c.execute('''INSERT INTO private_messages (from_user, to_user, text, time, date, is_read)
+                     VALUES (?, ?, ?, ?, ?, 0)''', (from_user, to_user, text, now_time, now_date))
+        message_id = c.lastrowid
+        conn.commit()
+        conn.close()
+        
+        print(f"✅ Личное сохранено! ID: {message_id}")
+        
+        return {
+            'id': message_id,
+            'from': from_user,
+            'to': to_user,
+            'text': text,
+            'time': now_time,
+            'date': now_date
+        }
+    except Exception as e:
+        print(f"❌ Ошибка сохранения личного: {e}")
+        return None
 
 def get_private_messages(user1, user2, limit=50):
-    """Получает переписку между двумя пользователями"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''SELECT id, from_user, to_user, text, time, date 
-                 FROM private_messages 
-                 WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?)
-                 ORDER BY id DESC LIMIT ?''', (user1, user2, user2, user1, limit))
-    messages = []
-    for row in reversed(list(c.fetchall())):
-        messages.append({
-            'id': row[0],
-            'from': row[1],
-            'to': row[2],
-            'text': row[3],
-            'time': row[4],
-            'date': row[5]
-        })
-    conn.close()
-    return messages
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('''SELECT id, from_user, to_user, text, time, date 
+                     FROM private_messages 
+                     WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?)
+                     ORDER BY id DESC LIMIT ?''', (user1, user2, user2, user1, limit))
+        rows = c.fetchall()
+        conn.close()
+        
+        messages = []
+        for row in reversed(rows):
+            messages.append({
+                'id': row[0],
+                'from': row[1],
+                'to': row[2],
+                'text': row[3],
+                'time': row[4],
+                'date': row[5]
+            })
+        return messages
+    except Exception as e:
+        print(f"❌ Ошибка загрузки личных: {e}")
+        return []
 
-def mark_private_as_read(from_user, to_user):
-    """Отмечает сообщения как прочитанные"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''UPDATE private_messages 
-                 SET is_read = 1 
-                 WHERE from_user = ? AND to_user = ?''', (from_user, to_user))
-    conn.commit()
-    conn.close()
+# ============ ПОЛЬЗОВАТЕЛИ ============
+
+def add_user(username):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        now = datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
+        c.execute('INSERT INTO users (username, registered, last_seen) VALUES (?, ?, ?)',
+                 (username, now, now))
+        conn.commit()
+        conn.close()
+        print(f"👤 Пользователь {username} добавлен")
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка добавления пользователя: {e}")
+        return False
+
+def set_user_online(username, online=True):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        now = datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
+        c.execute('UPDATE users SET online = ?, last_seen = ? WHERE username = ?',
+                 (1 if online else 0, now, username))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"❌ Ошибка обновления статуса: {e}")
+
+def get_all_users():
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('SELECT username, online FROM users ORDER BY username')
+        users = [{'username': row[0], 'online': bool(row[1])} for row in c.fetchall()]
+        conn.close()
+        return users
+    except Exception as e:
+        print(f"❌ Ошибка загрузки пользователей: {e}")
+        return []
+
+def get_user_status(username):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('SELECT online FROM users WHERE username = ?', (username,))
+        result = c.fetchone()
+        conn.close()
+        return result[0] if result else None
+    except Exception as e:
+        print(f"❌ Ошибка проверки статуса: {e}")
+        return None
 
 def get_unread_count(username):
-    """Сколько непрочитанных сообщений у пользователя"""
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''SELECT from_user, COUNT(*) 
-                 FROM private_messages 
-                 WHERE to_user = ? AND is_read = 0
-                 GROUP BY from_user''', (username,))
-    result = {row[0]: row[1] for row in c.fetchall()}
-    conn.close()
-    return result
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('''SELECT from_user, COUNT(*) 
+                     FROM private_messages 
+                     WHERE to_user = ? AND is_read = 0
+                     GROUP BY from_user''', (username,))
+        result = {row[0]: row[1] for row in c.fetchall()}
+        conn.close()
+        return result
+    except Exception as e:
+        print(f"❌ Ошибка загрузки непрочитанных: {e}")
+        return {}
 
-# ============ ИНИЦИАЛИЗАЦИЯ ============
-# Создаем таблицы при импорте
-if __name__ != '__main__':
-    init_db()
-else:
-    # Если файл запущен напрямую
-    init_db()
-    print("✅ Database ready!")
+def mark_private_as_read(from_user, to_user):
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        c = conn.cursor()
+        c.execute('''UPDATE private_messages 
+                     SET is_read = 1 
+                     WHERE from_user = ? AND to_user = ?''', (from_user, to_user))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"❌ Ошибка отметки прочитанных: {e}")
+
+# Инициализация при запуске
+init_db()
