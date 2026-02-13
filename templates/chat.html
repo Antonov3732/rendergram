@@ -29,7 +29,6 @@
             position: relative;
         }
         
-        /* Сайдбар - десктоп */
         .sidebar {
             width: 280px;
             background: #0a0a0a;
@@ -39,7 +38,6 @@
             transition: transform 0.3s ease;
         }
         
-        /* Сайдбар - мобильный */
         @media (max-width: 768px) {
             .sidebar {
                 position: absolute;
@@ -167,7 +165,6 @@
             flex-shrink: 0;
         }
         
-        /* Основной чат */
         .main {
             flex: 1;
             display: flex;
@@ -239,7 +236,6 @@
             padding-right: 4px;
         }
         
-        /* Ввод сообщения */
         .input-area {
             padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px);
             border-top: 1px solid #1a1a1a;
@@ -297,7 +293,6 @@
             font-style: italic;
         }
         
-        /* Скролл */
         ::-webkit-scrollbar {
             width: 6px;
             height: 6px;
@@ -312,7 +307,6 @@
             border-radius: 3px;
         }
         
-        /* Мобильная клавиатура */
         @media (max-width: 768px) and (max-height: 600px) {
             .messages {
                 max-height: calc(100vh - 140px);
@@ -326,11 +320,9 @@
 </head>
 <body>
     <div class="app">
-        <!-- Кнопка меню для мобилок -->
         <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
         <div class="overlay" onclick="toggleSidebar()"></div>
         
-        <!-- Сайдбар -->
         <div class="sidebar" id="sidebar">
             <div class="user">
                 <div class="user-name">{{ username }}</div>
@@ -357,7 +349,6 @@
             </div>
         </div>
         
-        <!-- Основной чат -->
         <div class="main">
             <div class="header" id="chatHeader">
                 Общий чат
@@ -370,8 +361,7 @@
             <div class="input-area">
                 <input type="text" id="messageInput" 
                        placeholder="Сообщение..." 
-                       autocomplete="off"
-                       onkeypress="if(event.key==='Enter') sendMessage()">
+                       autocomplete="off">
                 <button onclick="sendMessage()">→</button>
             </div>
         </div>
@@ -386,7 +376,8 @@
         let unreadMessages = {};
         const displayedMessageIds = new Set();
 
-        // ============ АДАПТИВНОСТЬ ============
+        // ============ ФУНКЦИИ ДЛЯ КНОПОК ============
+        
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.querySelector('.overlay');
@@ -394,60 +385,11 @@
             overlay.classList.toggle('show');
         }
 
-        // Закрывать сайдбар при свайпе
-        let touchStartX = 0;
-        document.addEventListener('touchstart', e => {
-            touchStartX = e.touches[0].clientX;
-        });
-
-        document.addEventListener('touchend', e => {
-            const touchEndX = e.changedTouches[0].clientX;
-            const sidebar = document.getElementById('sidebar');
-            
-            if (touchStartX < 30 && touchEndX > 100) {
-                sidebar.classList.add('open');
-                document.querySelector('.overlay').classList.add('show');
-            }
-            
-            if (touchStartX > 100 && touchEndX < 30) {
-                sidebar.classList.remove('open');
-                document.querySelector('.overlay').classList.remove('show');
-            }
-        });
-
-        // ============ ЗАГРУЗКА ============
-        fetch('/api/messages')
-            .then(res => res.json())
-            .then(messages => {
-                messages.forEach(msg => {
-                    const msgId = `${msg.id}-${msg.from}-${msg.time}`;
-                    if (!displayedMessageIds.has(msgId)) {
-                        displayedMessageIds.add(msgId);
-                        displayMessage(msg);
-                    }
-                });
-            });
-        
-        fetch('/api/unread')
-            .then(res => res.json())
-            .then(unread => {
-                unreadMessages = unread;
-                for (let [user, count] of Object.entries(unread)) {
-                    const badge = document.getElementById(`notify-${user}`);
-                    if (badge && count > 0) {
-                        badge.style.display = 'inline';
-                        badge.textContent = count;
-                    }
-                }
-            });
-
-        // ============ УПРАВЛЕНИЕ КАНАЛАМИ ============
         function switchChannel(channel) {
             document.querySelectorAll('.channel').forEach(el => {
                 el.classList.remove('active');
             });
             
-            // Закрыть сайдбар на мобилках
             if (window.innerWidth <= 768) {
                 toggleSidebar();
             }
@@ -493,7 +435,6 @@
             }
         }
         
-        // ============ СООБЩЕНИЯ ============
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
@@ -511,6 +452,8 @@
             
             input.value = '';
         }
+        
+        // ============ ОТОБРАЖЕНИЕ СООБЩЕНИЙ ============
         
         function displayMessage(msg) {
             const messagesDiv = document.getElementById('chatMessages');
@@ -554,7 +497,8 @@
             }
         }
         
-        // ============ СОКЕТЫ ============
+        // ============ СОКЕТ-СОБЫТИЯ ============
+        
         socket.on('new_message', function(msg) {
             if (currentChannel === 'general') {
                 displayMessage(msg);
@@ -603,18 +547,13 @@
         });
         
         socket.on('user_online', function(data) {
-        socket.on('user_online', function(data) {
             const statusEl = document.getElementById(`status-${data.username}`);
-            if (statusEl) {
-                statusEl.className = 'online-status online';
-            }
+            if (statusEl) statusEl.className = 'online-status online';
         });
         
         socket.on('user_offline', function(data) {
             const statusEl = document.getElementById(`status-${data.username}`);
-            if (statusEl) {
-                statusEl.className = 'online-status offline';
-            }
+            if (statusEl) statusEl.className = 'online-status offline';
         });
         
         socket.on('unread_update', function(unread) {
@@ -655,10 +594,10 @@
                 }, 1500);
             } else if (!data.is_typing) {
                 document.getElementById('typingIndicator').style.display = 'none';
-            }
-        });
+            }        });
         
         // ============ ИНДИКАТОР ПЕЧАТАНИЯ ============
+        
         document.getElementById('messageInput').addEventListener('input', function() {
             clearTimeout(typingTimeout);
             
@@ -677,14 +616,47 @@
             }, 1000);
         });
         
+        // ============ ОТПРАВКА ПО ENTER ============
+        
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
         // ============ ХЕЛПЕРЫ ============
+        
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
         
-        // ============ ФОКУС НА ВВОД ДЛЯ МОБИЛОК ============
+        // ============ СВАЙП ДЛЯ МОБИЛОК ============
+        
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', e => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            
+            if (touchStartX < 30 && touchEndX > 100) {
+                sidebar.classList.add('open');
+                overlay.classList.add('show');
+            }
+            
+            if (touchStartX > 100 && touchEndX < 30) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('show');
+            }
+        });
+        
+        // ============ ФОКУС ДЛЯ МОБИЛОК ============
+        
         document.getElementById('messageInput').addEventListener('focus', function() {
             if (window.innerWidth <= 768) {
                 setTimeout(() => {
@@ -694,6 +666,7 @@
         });
         
         // ============ ПРОВЕРКА ПОДКЛЮЧЕНИЯ ============
+        
         socket.on('connect', function() {
             console.log('✅ WebSocket подключен');
         });
@@ -702,12 +675,22 @@
             console.error('❌ WebSocket ошибка:', error);
         });
         
-        // ============ ИНИЦИАЛИЗАЦИЯ СТАТУСОВ ============
-        socket.on('users_update', function(users) {
-            // Уже реализовано выше
+        socket.on('disconnect', function() {
+            console.log('❌ WebSocket отключен');
         });
         
+        // ============ ИНИЦИАЛИЗАЦИЯ ============
+        
         console.log('✅ Чат загружен, пользователь:', username);
+        console.log('📁 Текущий канал:', currentChannel);
+        
+        // ============ ПРЕДОТВРАЩЕНИЕ ДУБЛЕЙ СООБЩЕНИЙ ============
+        
+        // Очищаем Set при перезагрузке страницы
+        window.addEventListener('beforeunload', function() {
+            displayedMessageIds.clear();
+        });
+        
     </script>
 </body>
 </html>
