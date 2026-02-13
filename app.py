@@ -11,7 +11,8 @@ monkey.patch_all()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'eptagram_secret_key_2024'
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent', logger=False, engineio_logger=False)
+app.config['SECRET_KEY_TYPE'] = 'bytes'  
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent', ping_timeout=60,ping_interval=25, logger=False, engineio_logger=False)
 
 # Хранилище socket.id
 user_sockets = {}
