@@ -2,7 +2,19 @@ import sqlite3
 from datetime import datetime
 import pytz
 import os
+import sqlite3
+from datetime import datetime
+import pytz
+import os
 
+print("="*50)
+print("💾 DATABASE.PY ЗАГРУЖЕН!")
+DB_PATH = os.path.join(os.path.dirname(__file__), 'eptagram.db')
+print(f"📁 Путь к БД: {os.path.abspath(DB_PATH)}")
+print(f"📁 Существует? {os.path.exists(DB_PATH)}")
+print("="*50)
+
+# ... остальной код
 # ✅ ФИКСИРОВАННЫЙ ПУТЬ ДЛЯ RENDER
 DB_PATH = '/opt/render/project/src/eptagram.db'
 
