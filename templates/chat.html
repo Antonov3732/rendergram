@@ -1510,12 +1510,23 @@
 // Загрузка сохраненного фона
 async function loadUserBackground() {
     try {
+        // Загружаем картинку
         const response = await fetch(`/api/bg-image/${username}`);
         const data = await response.json();
+        
+        // Загружаем непрозрачность
+        const opacityResponse = await fetch(`/api/bg-opacity/${username}`);
+        const opacityData = await opacityResponse.json();
+        
+        // Устанавливаем сохраненную непрозрачность
+        const savedOpacity = opacityData.opacity || 30;
+        document.getElementById('bgOpacity').value = savedOpacity;
+        document.getElementById('opacityValue').textContent = savedOpacity + '%';
+        document.getElementById('chatMessages').style.setProperty('--bg-opacity', savedOpacity / 100);
+        
         if (data.image) {
             setBackgroundImage(data.image);
         } else {
-            // Если нет картинки, ставим стандартный фон
             setDefaultBg();
         }
     } catch (error) {
@@ -1618,6 +1629,15 @@ async function uploadBgImage() {
         
         if (data.success) {
             setBackgroundImage(base64);
+            
+            // Сохраняем текущую непрозрачность
+            const currentOpacity = document.getElementById('bgOpacity').value;
+            await fetch('/api/bg-opacity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ opacity: parseInt(currentOpacity) })
+            });
+            
             toggleBgMenu();
             alert('✅ Фон успешно загружен!');
         }
@@ -1627,11 +1647,22 @@ async function uploadBgImage() {
 }
 
 // Регулировка прозрачности (исправлено!)
-function setBgOpacity(value) {
+async function setBgOpacity(value) {
     // 0% = полностью прозрачно (не видно), 100% = полностью непрозрачно (видно полностью)
     const opacity = value / 100;
     document.getElementById('opacityValue').textContent = value + '%';
     document.getElementById('chatMessages').style.setProperty('--bg-opacity', opacity);
+    
+    // Сохраняем в БД
+    try {
+        await fetch('/api/bg-opacity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ opacity: parseInt(value) })
+        });
+    } catch (error) {
+        console.error('❌ Ошибка сохранения непрозрачности:', error);
+    }
 }
 
 // Удаление фона
