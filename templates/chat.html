@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>EptaGram</title>
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
@@ -10,417 +10,374 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         
         body {
-            background: #0a0a0a;
+            background: #000;
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         
-        .chat-container {
-            width: 1200px;
-            height: 800px;
-            background: #1a1a1a;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-            overflow: hidden;
-            display: flex;
-            border: 1px solid #333;
-        }
-        
-        .sidebar {
-            width: 300px;
-            background: #0d0d0d;
-            border-right: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .user-profile {
-            padding: 20px;
-            background: #111;
-            border-bottom: 1px solid #333;
-        }
-        
-        .user-name {
-            font-size: 20px;
-            font-weight: bold;
-            color: #9f7aea;
-            margin-bottom: 5px;
-        }
-        
-        .logout-btn {
-            color: #fc8181;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        
-        .channels {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-        }
-        
-        .channel {
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 5px;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            color: #e0e0e0;
-        }
-        
-        .channel:hover {
-            background: #2d2d2d;
-        }
-        
-        .channel.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .channel-icon {
-            margin-right: 10px;
-            font-size: 20px;
-        }
-        
-        .online-status {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        
-        .online { background: #48bb78; }
-        .offline { background: #fc8181; }
-        
-        .main-chat {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #1a1a1a;
-        }
-        
-        .chat-header {
-            padding: 20px;
-            background: #111;
-            border-bottom: 1px solid #333;
-            font-size: 18px;
-            font-weight: bold;
-            color: #9f7aea;
-            display: flex;
-            align-items: center;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            background: #1a1a1a;
-        }
-        
-        .message {
-            margin-bottom: 20px;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .message-own {
-            align-items: flex-end;
-        }
-        
-        .message-content {
-            max-width: 70%;
-            padding: 12px 18px;
-            border-radius: 18px;
-            background: #2d2d2d;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            position: relative;
-            color: #e0e0e0;
-        }
-        
-        .message-own .message-content {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .message-sender {
-            font-weight: bold;
-            color: #9f7aea;
-            margin-bottom: 5px;
-        }
-        
-        .message-time {
-            font-size: 11px;
-            color: #a0aec0;
-            margin-top: 5px;
-            text-align: right;
-        }
-        
-        .message-own .message-time {
-            color: rgba(255,255,255,0.8);
-        }
-        
-        .typing-indicator {
-            padding: 10px 20px;
-            color: #a0aec0;
-            font-style: italic;
-            font-size: 14px;
-            background: #111;
-        }
-        
-        .message-input-area {
-            padding: 20px;
-            background: #111;
-            border-top: 1px solid #333;
-            display: flex;
-            gap: 10px;
-        }
-        
-        .message-input {
-            flex: 1;
-            padding: 12px;
-            border: 2px solid #333;
-            border-radius: 25px;
-            font-size: 15px;
-            transition: 0.3s;
-            background: #2d2d2d;
-            color: #e0e0e0;
-        }
-        
-        .message-input:focus {
-            border-color: #9f7aea;
-            outline: none;
-        }
-        
-        .message-input::placeholder {
-            color: #718096;
-        }
-        
-        .send-btn {
-            padding: 12px 25px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        
-        .send-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-        
-        .notification-badge {
-            background: #fc8181;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 12px;
-            margin-left: 10px;
-        }
-        
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #1a1a1a;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: #4a5568;
-            border-radius: 4px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: #718096;
-        }
-    /* ... твои существующие стили ... */
-
-    /* ========== АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ========== */
-    @media screen and (max-width: 768px) {
-        body {
-            padding: 0;
-            background: #1a1a1a;
-            align-items: stretch;
-        }
-        
-        .chat-container {
+        .app {
             width: 100%;
             height: 100vh;
-            border-radius: 0;
-            border: none;
-        }
-        
-        .sidebar {
-            position: fixed;
-            left: -100%;
-            top: 0;
-            width: 85%;
-            height: 100vh;
-            z-index: 1000;
-            transition: 0.3s;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.5);
-        }
-        
-        .sidebar.active {
-            left: 0;
-        }
-        
-        .chat-header {
-            padding: 15px;
+            display: flex;
+            background: #0a0a0a;
             position: relative;
+        }
+        
+        /* Сайдбар - десктоп */
+        .sidebar {
+            width: 280px;
+            background: #0a0a0a;
+            border-right: 1px solid #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        
+        /* Сайдбар - мобильный */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 85%;
+                max-width: 320px;
+                background: #0a0a0a;
+                z-index: 100;
+                transform: translateX(-100%);
+                box-shadow: 2px 0 20px rgba(0,0,0,0.5);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0,0,0,0.7);
+                z-index: 90;
+                display: none;
+            }
+            
+            .overlay.show {
+                display: block;
+            }
+            
+            .menu-toggle {
+                display: block !important;
+            }
         }
         
         .menu-toggle {
-            display: inline-block;
-            width: 30px;
-            height: 30px;
-            margin-right: 15px;
-            cursor: pointer;
-            color: #9f7aea;
-            font-size: 20px;
-            font-weight: bold;
-        }
-        
-        .message-content {
-            max-width: 85%;
-        }
-        
-        .message-input-area {
-            padding: 15px;
-        }
-        
-        .message-input {
-            padding: 10px;
-            font-size: 14px;
-        }
-        
-        .send-btn {
-            padding: 10px 20px;
-        }
-        
-        .user-profile {
-            padding: 15px;
-        }
-        
-        .channels {
-            padding: 15px;
-        }
-        
-        .channel {
-            padding: 12px;
-        }
-        
-        /* Затемнение фона при открытом меню */
-        .overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 999;
+            top: 16px;
+            left: 16px;
+            z-index: 200;
+            background: #1a1a1a;
+            border: none;
+            color: #fff;
+            font-size: 24px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
         }
         
-        .overlay.active {
-            display: block;
-        }
-    }
-
-    @media screen and (max-width: 480px) {
-        .message-content {
-            max-width: 90%;
-            padding: 10px 15px;
-        }
-        
-        .message-sender {
-            font-size: 13px;
-        }
-        
-        .message-time {
-            font-size: 10px;
-        }
-        
-        .typing-indicator {
-            padding: 8px 15px;
-            font-size: 12px;
+        .user {
+            padding: 20px;
+            border-bottom: 1px solid #1a1a1a;
         }
         
         .user-name {
-            font-size: 18px;
+            color: #fff;
+            font-weight: 600;
+            font-size: clamp(16px, 4vw, 18px);
+            margin-bottom: 8px;
         }
         
-        .logout-btn {
-            font-size: 12px;
+        .logout {
+            color: #888;
+            text-decoration: none;
+            font-size: clamp(12px, 3vw, 13px);
+        }
+        
+        .channels {
+            flex: 1;
+            overflow-y: auto;
+            padding: clamp(12px, 3vw, 16px);
         }
         
         .channel {
-            padding: 10px;
-            font-size: 14px;
+            padding: clamp(10px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            color: #ccc;
+            display: flex;
+            align-items: center;
+            transition: 0.2s;
+            font-size: clamp(13px, 3.5vw, 14px);
         }
-    }
+        
+        .channel:hover {
+            background: #1a1a1a;
+        }
+        
+        .channel.active {
+            background: #2d2d2d;
+            color: #fff;
+        }
+        
+        .online-status {
+            width: clamp(6px, 2vw, 8px);
+            height: clamp(6px, 2vw, 8px);
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .online { background: #00ff88; }
+        .offline { background: #666; }
+        
+        .divider {
+            color: #666;
+            font-size: clamp(10px, 2.5vw, 11px);
+            padding: 16px 16px 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .badge {
+            background: #ff4444;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: clamp(10px, 2.5vw, 11px);
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        
+        /* Основной чат */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0a0a;
+            width: 100%;
+        }
+        
+        .header {
+            padding: clamp(16px, 4vw, 20px);
+            border-bottom: 1px solid #1a1a1a;
+            color: #fff;
+            font-weight: 500;
+            font-size: clamp(16px, 4vw, 18px);
+            margin-left: clamp(0px, 10vw, 0px);
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                margin-left: 60px;
+            }
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: clamp(16px, 4vw, 24px);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 3vw, 16px);
+        }
+        
+        .message {
+            max-width: min(70%, 600px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message.own {
+            align-self: flex-end;
+        }
+        
+        .message-sender {
+            font-size: clamp(11px, 2.8vw, 12px);
+            color: #888;
+            margin-bottom: 4px;
+            padding-left: 4px;
+        }
+        
+        .message-bubble {
+            padding: clamp(8px, 2.5vw, 12px) clamp(12px, 3vw, 16px);
+            background: #1a1a1a;
+            border-radius: 18px;
+            color: #fff;
+            word-break: break-word;
+            font-size: clamp(13px, 3.5vw, 14px);
+            line-height: 1.4;
+        }
+        
+        .message.own .message-bubble {
+            background: #2d2d2d;
+        }
+        
+        .message-time {
+            font-size: clamp(9px, 2.2vw, 10px);
+            color: #666;
+            margin-top: 4px;
+            align-self: flex-end;
+            padding-right: 4px;
+        }
+        
+        /* Ввод сообщения */
+        .input-area {
+            padding: clamp(12px, 3vw, 16px) clamp(16px, 4vw, 20px);
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            gap: clamp(8px, 2vw, 12px);
+            background: #0a0a0a;
+        }
+        
+        .input-area input {
+            flex: 1;
+            padding: clamp(10px, 2.8vw, 12px) clamp(14px, 3.5vw, 16px);
+            background: #1a1a1a;
+            border: 1px solid #2d2d2d;
+            border-radius: 24px;
+            color: #fff;
+            font-size: clamp(14px, 3.8vw, 15px);
+            outline: none;
+            min-width: 0;
+        }
+        
+        .input-area input:focus {
+            border-color: #444;
+        }
+        
+        .input-area input::placeholder {
+            color: #666;
+            font-size: clamp(13px, 3.5vw, 14px);
+        }
+        
+        .input-area button {
+            padding: clamp(10px, 2.8vw, 12px) clamp(20px, 5vw, 24px);
+            background: #2d2d2d;
+            border: none;
+            border-radius: 24px;
+            color: #fff;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: clamp(13px, 3.5vw, 14px);
+            white-space: nowrap;
+        }
+        
+        .input-area button:hover {
+            background: #3d3d3d;
+        }
+        
+        .input-area button:active {
+            transform: scale(0.98);
+        }
+        
+        .typing {
+            padding: 8px 24px;
+            color: #666;
+            font-size: clamp(11px, 2.8vw, 12px);
+            font-style: italic;
+        }
+        
+        /* Скролл */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #2d2d2d;
+            border-radius: 3px;
+        }
+        
+        /* Мобильная клавиатура */
+        @media (max-width: 768px) and (max-height: 600px) {
+            .messages {
+                max-height: calc(100vh - 140px);
+            }
+            
+            .input-area {
+                padding: 10px 16px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <div class="sidebar">
-            <div class="user-profile">
+    <div class="app">
+        <!-- Кнопка меню для мобилок -->
+        <button class="menu-toggle" onclick="toggleSidebar()">☰</button>
+        <div class="overlay" onclick="toggleSidebar()"></div>
+        
+        <!-- Сайдбар -->
+        <div class="sidebar" id="sidebar">
+            <div class="user">
                 <div class="user-name">{{ username }}</div>
-                <a href="/logout" class="logout-btn">Выйти</a>
+                <a href="/logout" class="logout">Выйти</a>
             </div>
             
-            <div class="channels" id="channels">
+            <div class="channels">
                 <div class="channel active" onclick="switchChannel('general')">
-                    <span class="channel-icon">#</span>
+                    <span style="margin-right: 10px;">💬</span>
                     Общий чат
                 </div>
                 
-                <div style="margin-top: 20px; margin-bottom: 10px; color: #a0aec0; font-size: 12px; padding-left: 15px;">
-                    ЛИЧНЫЕ СООБЩЕНИЯ
-                </div>
+                <div class="divider">Личные сообщения</div>
                 
                 <div id="usersList">
                     {% for user in users %}
                     <div class="channel" id="user-{{ user }}" onclick="switchChannel('{{ user }}')">
                         <span class="online-status offline" id="status-{{ user }}"></span>
-                        {{ user }}
-                        <span class="notification-badge" id="notify-{{ user }}" style="display: none;"></span>
+                        <span style="flex: 1;">{{ user }}</span>
+                        <span class="badge" id="notify-{{ user }}" style="display: none;"></span>
                     </div>
                     {% endfor %}
                 </div>
             </div>
         </div>
         
-        <div class="main-chat">
-            <div class="chat-header" id="chatHeader">
-    <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
-    <span id="chatHeaderText">Общий чат</span>
-</div>
+        <!-- Основной чат -->
+        <div class="main">
+            <div class="header" id="chatHeader">
+                Общий чат
+            </div>
             
-            <div class="chat-messages" id="chatMessages"></div>
+            <div class="messages" id="chatMessages"></div>
             
-            <div class="typing-indicator" id="typingIndicator" style="display: none;"></div>
+            <div class="typing" id="typingIndicator" style="display: none;"></div>
             
-            <div class="message-input-area">
-                <input type="text" class="message-input" id="messageInput" 
-                       placeholder="Сообщение..." autocomplete="off">
-                <button class="send-btn" onclick="sendMessage()">Отправить</button>
+            <div class="input-area">
+                <input type="text" id="messageInput" 
+                       placeholder="Сообщение..." 
+                       autocomplete="off"
+                       onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()">→</button>
             </div>
         </div>
     </div>
-    <script>
 
+    <script>
         const socket = io();
         const username = '{{ username }}';
         let currentChannel = 'general';
@@ -429,50 +386,45 @@
         let unreadMessages = {};
         const displayedMessageIds = new Set();
 
-        // КОНВЕРТАЦИЯ UTC В ЛОКАЛЬНОЕ ВРЕМЯ
-        function convertToLocalTime(utcTimeStr, utcDateStr) {
-            if (!utcTimeStr) return '';
-            
-            const [hours, minutes] = utcTimeStr.split(':');
-            let [day, month, year] = ['13', '02', '2026'];
-            
-            if (utcDateStr) {
-                [day, month, year] = utcDateStr.split('.');
-            }
-            
-            const utcDate = new Date(Date.UTC(
-                parseInt(year), 
-                parseInt(month) - 1, 
-                parseInt(day), 
-                parseInt(hours), 
-                parseInt(minutes)
-            ));
-            
-            const localDate = new Date(utcDate);
-            const now = new Date();
-            
-            const localHours = localDate.getHours().toString().padStart(2, '0');
-            const localMinutes = localDate.getMinutes().toString().padStart(2, '0');
-            
-            const isToday = localDate.toDateString() === now.toDateString();
-            
-            if (isToday) {
-                return `${localHours}:${localMinutes}`;
-            } else {
-                const localDay = localDate.getDate().toString().padStart(2, '0');
-                const localMonth = (localDate.getMonth() + 1).toString().padStart(2, '0');
-                return `${localDay}.${localMonth} ${localHours}:${localMinutes}`;
-            }
+        // ============ АДАПТИВНОСТЬ ============
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('show');
         }
 
-        // ЗАГРУЗКА ИСТОРИИ
+        // Закрывать сайдбар при свайпе
+        let touchStartX = 0;
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.touches[0].clientX;
+        });
+
+        document.addEventListener('touchend', e => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const sidebar = document.getElementById('sidebar');
+            
+            if (touchStartX < 30 && touchEndX > 100) {
+                sidebar.classList.add('open');
+                document.querySelector('.overlay').classList.add('show');
+            }
+            
+            if (touchStartX > 100 && touchEndX < 30) {
+                sidebar.classList.remove('open');
+                document.querySelector('.overlay').classList.remove('show');
+            }
+        });
+
+        // ============ ЗАГРУЗКА ============
         fetch('/api/messages')
             .then(res => res.json())
             .then(messages => {
                 messages.forEach(msg => {
                     const msgId = `${msg.id}-${msg.from}-${msg.time}`;
-                    displayedMessageIds.add(msgId);
-                    displayMessage(msg);
+                    if (!displayedMessageIds.has(msgId)) {
+                        displayedMessageIds.add(msgId);
+                        displayMessage(msg);
+                    }
                 });
             });
         
@@ -482,41 +434,23 @@
                 unreadMessages = unread;
                 for (let [user, count] of Object.entries(unread)) {
                     const badge = document.getElementById(`notify-${user}`);
-                    if (badge) {
+                    if (badge && count > 0) {
                         badge.style.display = 'inline';
                         badge.textContent = count;
                     }
                 }
             });
-// ========== ФУНКЦИИ ДЛЯ МОБИЛЬНОЙ ВЕРСИИ ==========
-function toggleSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.getElementById('overlay');
-    sidebar.classList.toggle('active');
-    overlay.classList.toggle('active');
-}
 
-function closeSidebar() {
-    const sidebar = document.querySelector('.sidebar');
-    const overlay = document.getElementById('overlay');
-    sidebar.classList.remove('active');
-    overlay.classList.remove('active');
-}
-
-// Автоматически закрывать меню при смене канала на мобилках
-function switchChannel(channel) {
-    // ... твой существующий код ...
-    
-    // Добавь ЭТУ СТРОКУ в конец функции:
-    if (window.innerWidth <= 768) {
-        closeSidebar();
-    }
-}
-        // ПЕРЕКЛЮЧЕНИЕ КАНАЛОВ
+        // ============ УПРАВЛЕНИЕ КАНАЛАМИ ============
         function switchChannel(channel) {
             document.querySelectorAll('.channel').forEach(el => {
                 el.classList.remove('active');
             });
+            
+            // Закрыть сайдбар на мобилках
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
             
             if (channel === 'general') {
                 document.getElementById('chatHeader').innerHTML = 'Общий чат';
@@ -536,7 +470,7 @@ function switchChannel(channel) {
                         });
                     });
             } else {
-                document.getElementById('chatHeader').innerHTML = `Личный чат с ${channel}`;
+                document.getElementById('chatHeader').innerHTML = `${channel}`;
                 currentChannel = 'private';
                 currentUser = channel;
                 document.getElementById(`user-${channel}`).classList.add('active');
@@ -559,7 +493,7 @@ function switchChannel(channel) {
             }
         }
         
-        // ОТПРАВКА СООБЩЕНИЯ
+        // ============ СООБЩЕНИЯ ============
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
@@ -578,7 +512,6 @@ function switchChannel(channel) {
             input.value = '';
         }
         
-        // ОТОБРАЖЕНИЕ ОБЩЕГО СООБЩЕНИЯ
         function displayMessage(msg) {
             const messagesDiv = document.getElementById('chatMessages');
             
@@ -587,23 +520,18 @@ function switchChannel(channel) {
             displayedMessageIds.add(msgId);
             
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
-            
-            const timeDisplay = convertToLocalTime(msg.time, msg.date);
+            messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
             
             messageDiv.innerHTML = `
-                <div class="message-content">
-                    ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
-                    <div>${escapeHtml(msg.text)}</div>
-                    <div class="message-time">${timeDisplay}</div>
-                </div>
+                ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
+                <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                <div class="message-time">${msg.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
             `;
             
             messagesDiv.appendChild(messageDiv);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
         
-        // ОТОБРАЖЕНИЕ ЛИЧНОГО СООБЩЕНИЯ
         function displayPrivateMessage(msg) {
             if (currentUser === msg.from || currentUser === msg.to) {
                 const messagesDiv = document.getElementById('chatMessages');
@@ -613,16 +541,12 @@ function switchChannel(channel) {
                 displayedMessageIds.add(msgId);
                 
                 const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
-                
-                const timeDisplay = convertToLocalTime(msg.time, msg.date);
+                messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
                 
                 messageDiv.innerHTML = `
-                    <div class="message-content">
-                        ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
-                        <div>${escapeHtml(msg.text)}</div>
-                        <div class="message-time">${timeDisplay}</div>
-                    </div>
+                    ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
+                    <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                    <div class="message-time">${msg.time || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                 `;
                 
                 messagesDiv.appendChild(messageDiv);
@@ -630,14 +554,7 @@ function switchChannel(channel) {
             }
         }
         
-        // ФУНКЦИЯ ЭКРАНИРОВАНИЯ HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        // СОКЕТ-СОБЫТИЯ
+        // ============ СОКЕТЫ ============
         socket.on('new_message', function(msg) {
             if (currentChannel === 'general') {
                 displayMessage(msg);
@@ -674,8 +591,8 @@ function switchChannel(channel) {
                     div.innerHTML = `
                         <span class="online-status ${user.online ? 'online' : 'offline'}" 
                               id="status-${user.username}"></span>
-                        ${user.username}
-                        <span class="notification-badge" id="notify-${user.username}" 
+                        <span style="flex: 1;">${user.username}</span>
+                        <span class="badge" id="notify-${user.username}" 
                               style="display: ${unreadMessages[user.username] ? 'inline' : 'none'};">
                             ${unreadMessages[user.username] || ''}
                         </span>
@@ -683,6 +600,21 @@ function switchChannel(channel) {
                     usersList.appendChild(div);
                 }
             });
+        });
+        
+        socket.on('user_online', function(data) {
+        socket.on('user_online', function(data) {
+            const statusEl = document.getElementById(`status-${data.username}`);
+            if (statusEl) {
+                statusEl.className = 'online-status online';
+            }
+        });
+        
+        socket.on('user_offline', function(data) {
+            const statusEl = document.getElementById(`status-${data.username}`);
+            if (statusEl) {
+                statusEl.className = 'online-status offline';
+            }
         });
         
         socket.on('unread_update', function(unread) {
@@ -696,18 +628,8 @@ function switchChannel(channel) {
             }
         });
         
-        socket.on('user_online', function(data) {
-            const statusEl = document.getElementById(`status-${data.username}`);
-            if (statusEl) statusEl.className = 'online-status online';
-        });
-        
-        socket.on('user_offline', function(data) {
-            const statusEl = document.getElementById(`status-${data.username}`);
-            if (statusEl) statusEl.className = 'online-status offline';
-        });
-        
         socket.on('user_typing', function(data) {
-            if (currentChannel === 'general' && data.username !== username) {
+            if (currentChannel === 'general' && data.username !== username && data.is_typing) {
                 const indicator = document.getElementById('typingIndicator');
                 indicator.style.display = 'block';
                 indicator.innerHTML = `${data.username} печатает...`;
@@ -716,11 +638,13 @@ function switchChannel(channel) {
                 typingTimeout = setTimeout(() => {
                     indicator.style.display = 'none';
                 }, 1500);
+            } else if (!data.is_typing) {
+                document.getElementById('typingIndicator').style.display = 'none';
             }
         });
         
         socket.on('user_typing_private', function(data) {
-            if (currentUser === data.username) {
+            if (currentUser === data.username && data.is_typing) {
                 const indicator = document.getElementById('typingIndicator');
                 indicator.style.display = 'block';
                 indicator.innerHTML = `${data.username} печатает...`;
@@ -729,10 +653,12 @@ function switchChannel(channel) {
                 typingTimeout = setTimeout(() => {
                     indicator.style.display = 'none';
                 }, 1500);
+            } else if (!data.is_typing) {
+                document.getElementById('typingIndicator').style.display = 'none';
             }
         });
         
-        // ИНДИКАТОР ПЕЧАТАНИЯ
+        // ============ ИНДИКАТОР ПЕЧАТАНИЯ ============
         document.getElementById('messageInput').addEventListener('input', function() {
             clearTimeout(typingTimeout);
             
@@ -751,12 +677,37 @@ function switchChannel(channel) {
             }, 1000);
         });
         
-        // ОТПРАВКА ПО ENTER
-        document.getElementById('messageInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
+        // ============ ХЕЛПЕРЫ ============
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ============ ФОКУС НА ВВОД ДЛЯ МОБИЛОК ============
+        document.getElementById('messageInput').addEventListener('focus', function() {
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    window.scrollTo(0, document.body.scrollHeight);
+                }, 300);
             }
         });
+        
+        // ============ ПРОВЕРКА ПОДКЛЮЧЕНИЯ ============
+        socket.on('connect', function() {
+            console.log('✅ WebSocket подключен');
+        });
+        
+        socket.on('connect_error', function(error) {
+            console.error('❌ WebSocket ошибка:', error);
+        });
+        
+        // ============ ИНИЦИАЛИЗАЦИЯ СТАТУСОВ ============
+        socket.on('users_update', function(users) {
+            // Уже реализовано выше
+        });
+        
+        console.log('✅ Чат загружен, пользователь:', username);
     </script>
 </body>
 </html>
