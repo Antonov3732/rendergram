@@ -10,6 +10,10 @@ from datetime import datetime
 import json
 import database as db
 
+
+# ✅ Важно для Render!
+if os.environ.get('RENDER'):
+    os.environ['RENDER'] = 'true'
 # ============ СОЗДАНИЕ ПРИЛОЖЕНИЯ ============
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'eptagram_secret_key_2024'
