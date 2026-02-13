@@ -1012,38 +1012,92 @@ loadHistory();
             input.value = '';
         }
 
-        // ============ ФУНКЦИИ СОЗДАНИЯ СООБЩЕНИЙ ============
+       // ============ ФУНКЦИИ СОЗДАНИЯ СООБЩЕНИЙ С АВАТАРКАМИ ============
 
-        function createMessageElement(msg) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-            
-            let senderAvatar = '';
-            if (msg.from !== username) {
-                const userElement = document.getElementById(`user-${msg.from}`);
-                if (userElement) {
-                    const avatarImg = userElement.querySelector('.user-avatar-small');
-                    if (avatarImg) {
-                        senderAvatar = avatarImg.src;
-                    }
-                }
+function createMessageElement(msg) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+    
+    // Получаем аватар отправителя
+    let senderAvatar = '';
+    let senderName = msg.from;
+    
+    if (msg.from !== username) {
+        // Ищем элемент пользователя в списке
+        const userElement = document.getElementById(`user-${msg.from}`);
+        if (userElement) {
+            const avatarImg = userElement.querySelector('.user-avatar-small');
+            if (avatarImg) {
+                senderAvatar = avatarImg.src;
             }
-            
-            messageDiv.innerHTML = `
-                ${msg.from !== username ? `
-                    <div class="message-sender">
-                        <img class="user-avatar-small" src="${senderAvatar}" 
-                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
-                        ${escapeHtml(msg.from)}
-                    </div>
-                ` : ''}
-                <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
-            `;
-            
-            return messageDiv;
         }
+    }
+    
+    // Формируем HTML
+    let senderHtml = '';
+    if (msg.from !== username) {
+        // Для чужих сообщений - аватарка слева
+        senderHtml = `
+            <div class="message-sender">
+                <img class="user-avatar-small" src="${senderAvatar || '/default-avatar.png'}" 
+                     onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
+                ${escapeHtml(senderName)}
+            </div>
+        `;
+    } else {
+        // Для своих сообщений - только имя (аватарка не нужна, она в профиле)
+        senderHtml = ''; // Можно оставить пустым или добавить "Вы"
+    }
+    
+    messageDiv.innerHTML = `
+        ${senderHtml}
+        <div class="message-bubble">${escapeHtml(msg.text)}</div>
+        <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
+    `;
+    
+    return messageDiv;
+}
 
+function createPrivateMessageElement(msg) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+    
+    // Получаем аватар отправителя
+    let senderAvatar = '';
+    let senderName = msg.from;
+    
+    if (msg.from !== username) {
+        const userElement = document.getElementById(`user-${msg.from}`);
+        if (userElement) {
+            const avatarImg = userElement.querySelector('.user-avatar-small');
+            if (avatarImg) {
+                senderAvatar = avatarImg.src;
+            }
+        }
+    }
+    
+    // Формируем HTML
+    let senderHtml = '';
+    if (msg.from !== username) {
+        senderHtml = `
+            <div class="message-sender">
+                <img class="user-avatar-small" src="${senderAvatar || '/default-avatar.png'}" 
+                     onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
+                ${escapeHtml(senderName)}
+            </div>
+        `;
+    } else {
+        senderHtml = ''; // Свои сообщения без аватарки
+    }
+    
+    messageDiv.innerHTML = `
+        ${senderHtml}
+        <div class="message-bubble">${escapeHtml(msg.text)}</div>
+        <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
+    `;
+    
+    return messageDiv;
+}
         function createPrivateMessageElement(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
