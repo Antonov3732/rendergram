@@ -80,6 +80,8 @@ def register():
     password = request.form['password'].strip()
     confirm = request.form['confirm_password'].strip()
     
+    print(f"📝 Попытка регистрации: {username}")
+    
     if not username or not password:
         return 'Ник и пароль не могут быть пустыми'
     
@@ -89,12 +91,23 @@ def register():
     if len(password) < 4:
         return 'Пароль должен быть минимум 4 символа! <a href="/register">Попробовать снова</a>'
 
+    # Проверяем, существует ли пользователь
+    existing_user = db.get_user_status(username)
+    print(f"🔍 Результат проверки: {existing_user}")
+    
+    if existing_user is not None:
+        print(f"❌ Пользователь {username} уже существует")
+        return 'Этот ник уже занят! <a href="/register">Попробовать другой</a>'
+
+    # Добавляем нового пользователя
     if db.add_user(username, password):
+        print(f"✅ Пользователь {username} успешно создан")
         session['username'] = username
         db.set_user_online(username, True)
         return redirect(url_for('chat'))
     else:
-        return 'Этот ник уже занят! <a href="/register">Попробовать другой</a>'
+        print(f"❌ Ошибка при создании {username}")
+        return 'Ошибка при регистрации! <a href="/register">Попробовать снова</a>'
 
 @app.route('/logout')
 def logout():
@@ -116,7 +129,6 @@ def update_avatar():
     avatar = data.get('avatar')
     
     if db.update_avatar(session['username'], avatar):
-        # Оповещаем всех о новом аватаре
         socketio.emit('avatar_update', {
             'username': session['username'],
             'avatar': avatar
