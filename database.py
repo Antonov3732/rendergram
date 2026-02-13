@@ -64,6 +64,8 @@ def validate_password(password, hash):
 
 # ============ ПОЛЬЗОВАТЕЛИ ============
 
+# ============ ПОЛЬЗОВАТЕЛИ ============
+
 def get_user_status(username):
     """Проверяет, существует ли пользователь"""
     try:
@@ -75,13 +77,13 @@ def get_user_status(username):
         
         if result:
             print(f"🔍 Пользователь {username} НАЙДЕН в БД")
-            return True
+            return True  # Возвращаем True если найден
         else:
             print(f"🔍 Пользователь {username} НЕ НАЙДЕН в БД")
-            return None
+            return False  # Возвращаем False если не найден
     except Exception as e:
         print(f"❌ Ошибка проверки пользователя: {e}")
-        return None
+        return False  # В случае ошибки тоже False
 
 def add_user(username, password):
     """Добавляет нового пользователя с паролем"""
@@ -91,19 +93,21 @@ def add_user(username, password):
         now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
         password_hash = hash_password(password)
         
+        # Сначала проверим, есть ли уже такой пользователь
         cur.execute('SELECT username FROM users WHERE username = %s', (username,))
         if cur.fetchone():
             print(f"⚠️ Пользователь {username} УЖЕ существует")
             conn.close()
             return False
         
+        # Если нет - добавляем
         cur.execute(
             'INSERT INTO users (username, password, registered, last_seen) VALUES (%s, %s, %s, %s)',
             (username, password_hash, now, now)
         )
         conn.commit()
         conn.close()
-        print(f"✅ Пользователь {username} успешно добавлен")
+        print(f"✅ Пользователь {username} успешно добавлен в БД")
         return True
         
     except Exception as e:
