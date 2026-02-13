@@ -175,7 +175,7 @@ def handle_connect():
         db.set_user_online(username, True)
         user_sockets[username] = request.sid
         all_users = db.get_all_users()
-        emit('users_update', all_users, broadcast=True)
+        socketio.emit('users_update', all_users, broadcast=True)
         print(f'{username} подключился')
     else:
         print('Анонимное подключение отклонено')
@@ -188,7 +188,7 @@ def handle_disconnect():
         db.set_user_online(username, False)
         if username in user_sockets:
             del user_sockets[username]
-        emit('user_offline', {'username': username}, broadcast=True)
+        socketio.emit('user_offline', {'username': username}, broadcast=True)
         print(f'{username} отключился')
 
 @socketio.on('send_message')
@@ -198,7 +198,7 @@ def handle_message(data):
         return
     msg = db.save_general_message(username, data['text'])
     if msg:
-        emit('new_message', msg, broadcast=True)
+        socketio.emit('new_message', msg, broadcast=True)
 
 @socketio.on('send_private')
 def handle_private(data):
@@ -212,12 +212,13 @@ def handle_private(data):
     
     if msg:
         if to_user in user_sockets:
-            emit('new_private', msg, room=user_sockets[to_user])
-        emit('new_private', msg, room=request.sid)
+            socketio.emit('new_private', msg, room=user_sockets[to_user])
+        
+        socketio.emit('new_private', msg, room=request.sid)
         
         if to_user in user_sockets:
             unread = db.get_unread_count(to_user)
-            emit('unread_update', unread, room=user_sockets[to_user])
+            socketio.emit('unread_update', unread, room=user_sockets[to_user])
 
 @socketio.on('typing')
 def handle_typing(data):
@@ -226,13 +227,13 @@ def handle_typing(data):
         return
 
     if data['to'] == 'general':
-        emit('user_typing', {
+        socketio.emit('user_typing', {
             'username': username,
             'is_typing': data['is_typing']
         }, broadcast=True, include_self=False)
     else:
         if data['to'] in user_sockets:
-            emit('user_typing_private', {
+            socketio.emit('user_typing_private', {
                 'username': username,
                 'is_typing': data['is_typing']
             }, room=user_sockets[data['to']])
