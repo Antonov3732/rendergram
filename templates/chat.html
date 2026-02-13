@@ -246,56 +246,14 @@
             }
         }
 
-/* ============ ФОН ЧАТА ============ */
-.messages {
-    flex: 1;
-    overflow-y: auto;
-    padding: clamp(16px, 4vw, 24px);
-    display: flex;
-    flex-direction: column;
-    gap: clamp(12px, 3vw, 16px);
-    background: #000000;  /* черный фон по умолчанию */
-    position: relative;
-    min-height: 100%;
-}
-
-/* Контейнер для фоновой картинки ТОЛЬКО в области сообщений */
-.messages.has-bg-image {
-    background: transparent;  /* убираем черный фон */
-    position: relative;
-}
-
-.messages.has-bg-image::before {
-    content: '';
-    position: absolute;  /* absolute внутри контейнера */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: var(--user-bg);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;  /* фиксируем */
-    opacity: var(--bg-opacity, 0.3);
-    pointer-events: none;
-    z-index: 1;
-    width: 100%;
-    height: 100%;
-}
-
-/* Сами сообщения - ПОВЕРХ картинки */
-.messages > * {
-    position: relative;
-    z-index: 2;
-}
-
-/* Для мобилок */
-@media (max-width: 768px) {
-    .messages.has-bg-image::before {
-        background-attachment: fixed;  /* тоже фиксируем */
-    }
-}
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: clamp(16px, 4vw, 24px);
+            display: flex;
+            flex-direction: column;
+            gap: clamp(12px, 3vw, 16px);
+        }
 
         .message {
             max-width: min(70%, 600px);
@@ -557,188 +515,6 @@
                 padding: 10px 16px;
             }
         }
-        /* ============ МЕНЮ ФОНА ============ */
-.bg-toggle {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #2d2d2d;
-    border: none;
-    color: #fff;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 999;
-    transition: background 0.2s;
-}
-
-.bg-toggle:hover {
-    background: #3d3d3d;
-}
-
-.bg-menu {
-    position: fixed;
-    bottom: 140px;
-    right: 20px;
-    width: 320px;
-    max-height: 500px;
-    background: #0a0a0a;
-    border: 1px solid #2d2d2d;
-    border-radius: 16px;
-    z-index: 1000;
-    display: none;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-.bg-menu.show {
-    display: block;
-}
-
-.bg-menu-header {
-    padding: 15px 20px;
-    background: #111;
-    border-bottom: 1px solid #2d2d2d;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.bg-menu-header h4 {
-    color: #fff;
-    font-size: 16px;
-}
-
-.bg-menu-header .close {
-    color: #666;
-    font-size: 20px;
-    cursor: pointer;
-}
-
-.bg-menu-content {
-    padding: 15px;
-    overflow-y: auto;
-    max-height: 400px;
-}
-
-.bg-section {
-    margin-bottom: 20px;
-}
-
-.bg-section h5 {
-    color: #888;
-    font-size: 14px;
-    margin-bottom: 10px;
-}
-
-.bg-patterns {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-}
-
-.bg-option {
-    cursor: pointer;
-    text-align: center;
-}
-
-.bg-preview {
-    width: 100%;
-    height: 60px;
-    border-radius: 8px;
-    border: 2px solid transparent;
-    transition: border-color 0.2s;
-    margin-bottom: 5px;
-}
-
-.bg-option:hover .bg-preview {
-    border-color: #666;
-}
-
-.bg-option.selected .bg-preview {
-    border-color: #00ff88;
-}
-
-.bg-option span {
-    color: #ccc;
-    font-size: 12px;
-}
-
-/* Превью тем - теперь только базовая */
-.bg-preview.default { background: #000000; }
-/* Все остальные превью (dark-gradient, space, forest, ocean, grid, dots) - УДАЛИ! */
-}
-.bg-preview.dots {
-    background-image: radial-gradient(#fff 1px, transparent 1px);
-    background-size: 20px 20px;
-    background-color: #1a1a1a;
-}
-
-/* Своя картинка */
-.custom-bg {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.upload-bg-btn {
-    padding: 12px;
-    background: #2d2d2d;
-    border: none;
-    border-radius: 8px;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.upload-bg-btn:hover {
-    background: #3d3d3d;
-}
-
-#customBgPreview {
-    width: 100%;
-    height: 120px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 8px;
-    border: 1px solid #2d2d2d;
-}
-
-.opacity-control {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.opacity-control label {
-    color: #888;
-    font-size: 13px;
-}
-
-.opacity-control input {
-    width: 100%;
-}
-
-.save-bg-btn {
-    padding: 10px;
-    background: #00a884;
-    border: none;
-    border-radius: 8px;
-    color: #fff;
-    cursor: pointer;
-}
-
-.remove-bg-btn {
-    padding: 10px;
-    background: #2d2d2d;
-    border: none;
-    border-radius: 8px;
-    color: #ff6666;
-    cursor: pointer;
-}
-
     </style>
 </head>
 <body>
@@ -823,46 +599,7 @@
             </div>
         </div>
     </div>
-        <!-- Кнопка для открытия меню фона -->
-    <button class="bg-toggle" onclick="toggleBgMenu()">🎨</button>
 
-   <!-- Меню выбора фона -->
-<div class="bg-menu" id="bgMenu">
-    <div class="bg-menu-header">
-        <h4>Фон чата</h4>
-        <span class="close" onclick="toggleBgMenu()">&times;</span>
-    </div>
-    <div class="bg-menu-content">
-        <!-- Базовая тема -->
-        <div class="bg-section">
-            <h5>Стандартный фон</h5>
-            <div class="bg-patterns">
-                <div class="bg-option default" onclick="setDefaultBg()" title="Стандартный">
-                    <div class="bg-preview default"></div>
-                    <span>Стандарт</span>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Своя картинка -->
-        <div class="bg-section">
-            <h5>Своя картинка</h5>
-            <div class="custom-bg">
-                <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
-                <button class="upload-bg-btn" onclick="document.getElementById('bgImageUpload').click()">
-                    Выбрать изображение
-                </button>
-                <div class="bg-preview" id="customBgPreview"></div>
-                <div class="opacity-control">
-                    <label>Непрозрачность: <span id="opacityValue">30%</span></label>
-                    <input type="range" id="bgOpacity" min="0" max="100" value="30" onchange="setBgOpacity(this.value)">
-                </div>
-                <button class="save-bg-btn" onclick="uploadBgImage()">Сохранить фон</button>
-                <button class="remove-bg-btn" onclick="removeBg()">Удалить фон</button>
-            </div>
-        </div>
-    </div>
-</div>
     <script>
         // ============ ПОДКЛЮЧЕНИЕ WEBSOCKET ============
         const socket = io();
@@ -872,8 +609,8 @@
         let typingTimeout = null;
         let unreadMessages = {};
         const displayedMessageIds = new Set();
-
-                // ============ КОНВЕРТАЦИЯ ВРЕМЕНИ В ЛОКАЛЬНЫЙ ПОЯС С ПОЛНОЙ ДАТОЙ ============
+        
+        // ============ КОНВЕРТАЦИЯ ВРЕМЕНИ В ЛОКАЛЬНЫЙ ПОЯС ============
         function convertToLocalTime(utcTimeStr, utcDateStr) {
             if (!utcTimeStr) return '';
             
@@ -902,26 +639,30 @@
             const localMinutes = localDate.getMinutes().toString().padStart(2, '0');
             const localDay = localDate.getDate().toString().padStart(2, '0');
             const localMonth = (localDate.getMonth() + 1).toString().padStart(2, '0');
-            const localYear = localDate.getFullYear();
             
             // Проверяем, сегодня ли сообщение
             const now = new Date();
             const isToday = localDate.toDateString() === now.toDateString();
-            const isThisYear = localYear === now.getFullYear();
             
             if (isToday) {
-                // Сегодня: показываем только время
                 return `${localHours}:${localMinutes}`;
-            } else if (isThisYear) {
-                // Этот год: показываем число.месяц время
-                return `${localDay}.${localMonth} ${localHours}:${localMinutes}`;
             } else {
-                // Другой год: полная дата
-                return `${localDay}.${localMonth}.${localYear} ${localHours}:${localMinutes}`;
+                return `${localDay}.${localMonth} ${localHours}:${localMinutes}`;
             }
         }
-        // ============ ПЕРЕМЕННЫЕ ДЛЯ ПАГИНАЦИИ ============
+
+        // Функция для определения часового пояса пользователя
+        function getUserTimezone() {
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const offset = -new Date().getTimezoneOffset() / 60;
+            console.log(`🌍 Часовой пояс: ${timezone} (UTC${offset >= 0 ? '+' : ''}${offset})`);
+            return { timezone, offset };
+        }
+
+        // Вызываем при старте для информации
+        getUserTimezone();
         
+        // ============ ПЕРЕМЕННЫЕ ДЛЯ ПАГИНАЦИИ ============
         let currentOffset = 0;
         let hasMoreHistory = true;
         let isLoadingHistory = false;
@@ -1038,10 +779,13 @@
                             senderHtml = `<div class="message-sender">${msg.from}</div>`;
                         }
                         
+                        // Конвертируем время в локальное
+                        const localTime = convertToLocalTime(msg.time, msg.date);
+                        
                         messageDiv.innerHTML = `
                             ${senderHtml}
                             <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                            <div class="message-time">${msg.time}</div>
+                            <div class="message-time">${localTime}</div>
                         `;
                         
                         container.appendChild(messageDiv);
@@ -1198,10 +942,13 @@
                                 senderHtml = `<div class="message-sender">${msg.from}</div>`;
                             }
                             
+                            // Конвертируем время в локальное
+                            const localTime = convertToLocalTime(msg.time, msg.date);
+                            
                             messageDiv.innerHTML = `
                                 ${senderHtml}
                                 <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                                <div class="message-time">${msg.time}</div>
+                                <div class="message-time">${localTime}</div>
                             `;
                             
                             container.appendChild(messageDiv);
@@ -1246,10 +993,13 @@
                                 senderHtml = `<div class="message-sender">${msg.from}</div>`;
                             }
                             
+                            // Конвертируем время в локальное
+                            const localTime = convertToLocalTime(msg.time, msg.date);
+                            
                             messageDiv.innerHTML = `
                                 ${senderHtml}
                                 <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                                <div class="message-time">${msg.time}</div>
+                                <div class="message-time">${localTime}</div>
                             `;
                             
                             container.appendChild(messageDiv);
@@ -1286,7 +1036,7 @@
 
         // ============ ФУНКЦИИ СОЗДАНИЯ СООБЩЕНИЙ ============
 
-               function createMessageElement(msg) {
+        function createMessageElement(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
             
@@ -1301,7 +1051,7 @@
                 }
             }
             
-            // Конвертируем время с полной датой
+            // Конвертируем время в локальное
             const localTime = convertToLocalTime(msg.time, msg.date);
             
             messageDiv.innerHTML = `
@@ -1319,7 +1069,7 @@
             return messageDiv;
         }
 
-                function createPrivateMessageElement(msg) {
+        function createPrivateMessageElement(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
             
@@ -1334,7 +1084,7 @@
                 }
             }
             
-            // Конвертируем время с полной датой
+            // Конвертируем время в локальное
             const localTime = convertToLocalTime(msg.time, msg.date);
             
             messageDiv.innerHTML = `
@@ -1574,194 +1324,6 @@
         });
 
         console.log('Чат загружен, пользователь:', username);
-        // ============ ФУНКЦИИ ДЛЯ ФОНА ============
-
-// ============ ФУНКЦИИ ДЛЯ ФОНА ============
-
-// Загрузка сохраненного фона
-async function loadUserBackground() {
-    try {
-        // Загружаем картинку
-        const response = await fetch(`/api/bg-image/${username}`);
-        const data = await response.json();
-        
-        // Загружаем непрозрачность
-        const opacityResponse = await fetch(`/api/bg-opacity/${username}`);
-        const opacityData = await opacityResponse.json();
-        
-        // Устанавливаем сохраненную непрозрачность
-        const savedOpacity = opacityData.opacity || 30;
-        document.getElementById('bgOpacity').value = savedOpacity;
-        document.getElementById('opacityValue').textContent = savedOpacity + '%';
-        document.getElementById('chatMessages').style.setProperty('--bg-opacity', savedOpacity / 100);
-        
-        if (data.image) {
-            setBackgroundImage(data.image);
-        } else {
-            setDefaultBg();
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки фона:', error);
-    }
-}
-
-// Открыть/закрыть меню фона
-function toggleBgMenu() {
-    document.getElementById('bgMenu').classList.toggle('show');
-}
-
-// Установка стандартного фона
-async function setDefaultBg() {
-    const messagesDiv = document.getElementById('chatMessages');
-    
-    // Убираем класс с картинкой
-    messagesDiv.classList.remove('has-bg-image');
-    messagesDiv.style.removeProperty('--user-bg');
-    
-    // Сбрасываем классы
-    messagesDiv.className = 'messages';
-    messagesDiv.classList.add('default');
-    messagesDiv.style.background = '#000000';
-    
-    // Подсвечиваем стандартную тему
-    document.querySelectorAll('.bg-option').forEach(opt => {
-        opt.classList.remove('selected');
-    });
-    document.querySelector('.bg-option.default')?.classList.add('selected');
-    
-    try {
-        // Удаляем картинку из БД
-        await fetch('/api/bg-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: null })
-        });
-        
-        // Сохраняем паттерн как default
-        await fetch('/api/bg-pattern', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pattern: 'default' })
-        });
-        
-        console.log('✅ Установлен стандартный фон');
-    } catch (error) {
-        console.error('❌ Ошибка сохранения:', error);
-    }
-}
-
-// Установка картинки
-function setBackgroundImage(imageBase64) {
-    const messagesDiv = document.getElementById('chatMessages');
-    messagesDiv.style.setProperty('--user-bg', `url("${imageBase64}")`);
-    messagesDiv.classList.add('has-bg-image');
-    // Убираем выделение со стандартной темы
-    document.querySelectorAll('.bg-option').forEach(opt => {
-        opt.classList.remove('selected');
-    });
-}
-
-// Предпросмотр выбранного изображения
-document.getElementById('bgImageUpload').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) {
-        alert('Файл слишком большой. Максимум 5MB');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('customBgPreview').style.backgroundImage = `url("${e.target.result}")`;
-    };
-    reader.readAsDataURL(file);
-});
-
-// Загрузка картинки на сервер
-async function uploadBgImage() {
-    const preview = document.getElementById('customBgPreview');
-    const bgImage = preview.style.backgroundImage;
-    
-    if (!bgImage || bgImage === 'none') {
-        alert('Сначала выберите изображение');
-        return;
-    }
-    
-    const base64 = bgImage.slice(5, -2);
-    
-    try {
-        const response = await fetch('/api/bg-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: base64 })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            setBackgroundImage(base64);
-            
-            // Сохраняем текущую непрозрачность
-            const currentOpacity = document.getElementById('bgOpacity').value;
-            await fetch('/api/bg-opacity', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ opacity: parseInt(currentOpacity) })
-            });
-            
-            toggleBgMenu();
-            alert('✅ Фон успешно загружен!');
-        }
-    } catch (error) {
-        alert('❌ Ошибка загрузки фона');
-    }
-}
-
-// Регулировка прозрачности (исправлено!)
-async function setBgOpacity(value) {
-    // 0% = полностью прозрачно (не видно), 100% = полностью непрозрачно (видно полностью)
-    const opacity = value / 100;
-    document.getElementById('opacityValue').textContent = value + '%';
-    document.getElementById('chatMessages').style.setProperty('--bg-opacity', opacity);
-    
-    // Сохраняем в БД
-    try {
-        await fetch('/api/bg-opacity', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ opacity: parseInt(value) })
-        });
-    } catch (error) {
-        console.error('❌ Ошибка сохранения непрозрачности:', error);
-    }
-}
-
-// Удаление фона
-async function removeBg() {
-    if (confirm('Удалить фоновое изображение?')) {
-        try {
-            const response = await fetch('/api/bg-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: null })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                setDefaultBg(); // Возвращаем стандартный фон
-                document.getElementById('customBgPreview').style.backgroundImage = '';
-                toggleBgMenu();
-            }
-        } catch (error) {
-            alert('Ошибка удаления фона');
-        }
-    }
-}
-
-// Загружаем фон при старте
-loadUserBackground();
     </script>
 </body>
 </html>
