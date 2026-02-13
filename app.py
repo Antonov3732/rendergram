@@ -95,7 +95,7 @@ def register():
     existing_user = db.get_user_status(username)
     print(f"🔍 Результат проверки: {existing_user}")
     
-    if existing_user is not None:
+    if existing_user:  # Если True - пользователь уже есть
         print(f"❌ Пользователь {username} уже существует")
         return 'Этот ник уже занят! <a href="/register">Попробовать другой</a>'
 
