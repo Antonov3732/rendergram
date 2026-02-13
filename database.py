@@ -12,45 +12,48 @@ def get_db():
 
 def init_db():
     """Создает все таблицы"""
-    conn = get_db()
-    cur = conn.cursor()
-    
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            username TEXT PRIMARY KEY,
-            password TEXT NOT NULL,
-            avatar TEXT,
-            online INTEGER DEFAULT 0,
-            last_seen TEXT,
-            registered TEXT
-        )
-    ''')
-    
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS general_messages (
-            id SERIAL PRIMARY KEY,
-            username TEXT,
-            text TEXT,
-            time TEXT,
-            date TEXT
-        )
-    ''')
-    
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS private_messages (
-            id SERIAL PRIMARY KEY,
-            from_user TEXT,
-            to_user TEXT,
-            text TEXT,
-            time TEXT,
-            date TEXT,
-            is_read INTEGER DEFAULT 0
-        )
-    ''')
-    
-    conn.commit()
-    conn.close()
-    print("✅ База данных инициализирована")
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                username TEXT PRIMARY KEY,
+                password TEXT NOT NULL,
+                avatar TEXT,
+                online INTEGER DEFAULT 0,
+                last_seen TEXT,
+                registered TEXT
+            )
+        ''')
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS general_messages (
+                id SERIAL PRIMARY KEY,
+                username TEXT,
+                text TEXT,
+                time TEXT,
+                date TEXT
+            )
+        ''')
+        
+        cur.execute('''
+            CREATE TABLE IF NOT EXISTS private_messages (
+                id SERIAL PRIMARY KEY,
+                from_user TEXT,
+                to_user TEXT,
+                text TEXT,
+                time TEXT,
+                date TEXT,
+                is_read INTEGER DEFAULT 0
+            )
+        ''')
+        
+        conn.commit()
+        conn.close()
+        print("✅ База данных инициализирована")
+    except Exception as e:
+        print(f"❌ Ошибка инициализации БД: {e}")
 
 # ============ ХЕЛПЕРЫ ============
 
@@ -183,11 +186,14 @@ def get_all_users():
 # ============ ОБЩИЙ ЧАТ ============
 
 def save_general_message(username, text):
+    """Сохраняет сообщение в общий чат"""
     try:
         conn = get_db()
         cur = conn.cursor()
         now_time = datetime.now(timezone.utc).strftime('%H:%M')
         now_date = datetime.now(timezone.utc).strftime('%d.%m.%Y')
+        
+        print(f"💾 Сохраняю сообщение от {username}: {text[:30]}...")
         
         cur.execute(
             'INSERT INTO general_messages (username, text, time, date) VALUES (%s, %s, %s, %s) RETURNING id',
@@ -197,7 +203,7 @@ def save_general_message(username, text):
         conn.commit()
         conn.close()
         
-        print(f"✅ Сообщение сохранено! ID: {message_id}")
+        print(f"✅ Сообщение СОХРАНЕНО! ID: {message_id}")
         
         return {
             'id': message_id,
@@ -207,10 +213,11 @@ def save_general_message(username, text):
             'date': now_date
         }
     except Exception as e:
-        print(f"❌ Ошибка сохранения сообщения: {e}")
+        print(f"❌ ОШИБКА СОХРАНЕНИЯ: {e}")
         return None
 
 def get_general_messages(limit=50, offset=0):
+    """Получает сообщения из общего чата"""
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -230,19 +237,24 @@ def get_general_messages(limit=50, offset=0):
                 'time': row['time'],
                 'date': row['date']
             })
+        
+        print(f"📖 Загружено {len(messages)} сообщений из БД")
         return messages
     except Exception as e:
-        print(f"❌ Ошибка загрузки сообщений: {e}")
+        print(f"❌ Ошибка загрузки: {e}")
         return []
 
 # ============ ЛИЧНЫЕ СООБЩЕНИЯ ============
 
 def save_private_message(from_user, to_user, text):
+    """Сохраняет личное сообщение"""
     try:
         conn = get_db()
         cur = conn.cursor()
         now_time = datetime.now(timezone.utc).strftime('%H:%M')
         now_date = datetime.now(timezone.utc).strftime('%d.%m.%Y')
+        
+        print(f"💾 Сохраняю личное: {from_user} -> {to_user}: {text[:30]}...")
         
         cur.execute(
             'INSERT INTO private_messages (from_user, to_user, text, time, date, is_read) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id',
@@ -251,6 +263,8 @@ def save_private_message(from_user, to_user, text):
         message_id = cur.fetchone()['id']
         conn.commit()
         conn.close()
+        
+        print(f"✅ Личное СОХРАНЕНО! ID: {message_id}")
         
         return {
             'id': message_id,
@@ -261,7 +275,7 @@ def save_private_message(from_user, to_user, text):
             'date': now_date
         }
     except Exception as e:
-        print(f"❌ Ошибка сохранения личного сообщения: {e}")
+        print(f"❌ Ошибка сохранения личного: {e}")
         return None
 
 def get_private_messages(user1, user2, limit=50, offset=0):
@@ -288,9 +302,10 @@ def get_private_messages(user1, user2, limit=50, offset=0):
                 'time': row['time'],
                 'date': row['date']
             })
+        print(f"📖 Загружено {len(messages)} личных сообщений")
         return messages
     except Exception as e:
-        print(f"❌ Ошибка загрузки личных сообщений: {e}")
+        print(f"❌ Ошибка загрузки личных: {e}")
         return []
 
 def mark_private_as_read(from_user, to_user):
