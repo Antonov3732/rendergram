@@ -884,66 +884,118 @@ loadHistory();
         }
 
         function switchChannel(channel) {
-            document.querySelectorAll('.channel').forEach(el => {
-                el.classList.remove('active');
-            });
+    document.querySelectorAll('.channel').forEach(el => {
+        el.classList.remove('active');
+    });
 
-            if (window.innerWidth <= 768) {
-                toggleSidebar();
-            }
+    if (window.innerWidth <= 768) {
+        toggleSidebar();
+    }
 
-            currentOffset = 0;
-            hasMoreHistory = true;
-            isLoadingHistory = false;
+    currentOffset = 0;
+    hasMoreHistory = true;
+    isLoadingHistory = false;
 
-            if (channel === 'general') {
-                document.getElementById('chatHeader').innerHTML = 'Общий чат';
-                currentChannel = 'general';
-                currentUser = null;
+    if (channel === 'general') {
+        document.getElementById('chatHeader').innerHTML = 'Общий чат';
+        currentChannel = 'general';
+        currentUser = null;
 
-                document.getElementById('chatMessages').innerHTML = '';
-                displayedMessageIds.clear();
+        // Очищаем контейнер и Set
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = '';
+        displayedMessageIds.clear();
 
-                fetch('/api/messages?limit=20')
-                    .then(res => res.json())
-                    .then(messages => {
-                        messages.forEach(msg => {
-                            const msgId = `${msg.id}-${msg.from}-${msg.time}`;
-                            displayedMessageIds.add(msgId);
-                            displayMessage(msg);
-                        });
-                        currentOffset = messages.length;
-                        if (messages.length < 20) {
-                            hasMoreHistory = false;
-                        }
-                    });
-            } else {
-                document.getElementById('chatHeader').innerHTML = `${channel}`;
-                currentChannel = 'private';
-                currentUser = channel;
-                document.getElementById(`user-${channel}`).classList.add('active');
+        // ЗАГРУЖАЕМ ОБЩИЕ СООБЩЕНИЯ
+        fetch('/api/messages')
+            .then(res => res.json())
+            .then(messages => {
+                console.log('📥 Загружено общих сообщений:', messages.length);
+                
+                messages.reverse().forEach(msg => {
+                    const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+                    displayedMessageIds.add(msgId);
+                    
+                    // Прямое создание сообщения (как в loadHistory)
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+                    
+                    let senderHtml = '';
+                    if (msg.from !== username) {
+                        senderHtml = `<div class="message-sender">${msg.from}</div>`;
+                    }
+                    
+                    messageDiv.innerHTML = `
+                        ${senderHtml}
+                        <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                        <div class="message-time">${msg.time}</div>
+                    `;
+                    
+                    container.appendChild(messageDiv);
+                });
+                
+                currentOffset = messages.length;
+                if (messages.length < 20) {
+                    hasMoreHistory = false;
+                }
+                
+                // Прокрутка вниз
+                container.scrollTop = container.scrollHeight;
+            })
+            .catch(err => console.error('❌ Ошибка загрузки общего чата:', err));
+            
+    } else {
+        document.getElementById('chatHeader').innerHTML = `${channel}`;
+        currentChannel = 'private';
+        currentUser = channel;
+        document.getElementById(`user-${channel}`).classList.add('active');
 
-                const badge = document.getElementById(`notify-${channel}`);
-                if (badge) badge.style.display = 'none';
+        const badge = document.getElementById(`notify-${channel}`);
+        if (badge) badge.style.display = 'none';
 
-                document.getElementById('chatMessages').innerHTML = '';
-                displayedMessageIds.clear();
+        // Очищаем контейнер и Set
+        const container = document.getElementById('chatMessages');
+        container.innerHTML = '';
+        displayedMessageIds.clear();
 
-                fetch(`/api/private/${channel}?limit=20`)
-                    .then(res => res.json())
-                    .then(messages => {
-                        messages.forEach(msg => {
-                            const msgId = `${msg.id}-${msg.from}-${msg.time}-private`;
-                            displayedMessageIds.add(msgId);
-                            displayPrivateMessage(msg);
-                        });
-                        currentOffset = messages.length;
-                        if (messages.length < 20) {
-                            hasMoreHistory = false;
-                        }
-                    });
-            }
-        }
+        // ЗАГРУЖАЕМ ЛИЧНЫЕ СООБЩЕНИЯ
+        fetch(`/api/private/${channel}`)
+            .then(res => res.json())
+            .then(messages => {
+                console.log('📥 Загружено личных сообщений:', messages.length);
+                
+                messages.reverse().forEach(msg => {
+                    const msgId = `${msg.id}-${msg.from}-${msg.time}-private`;
+                    displayedMessageIds.add(msgId);
+                    
+                    // Прямое создание сообщения
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+                    
+                    let senderHtml = '';
+                    if (msg.from !== username) {
+                        senderHtml = `<div class="message-sender">${msg.from}</div>`;
+                    }
+                    
+                    messageDiv.innerHTML = `
+                        ${senderHtml}
+                        <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                        <div class="message-time">${msg.time}</div>
+                    `;
+                    
+                    container.appendChild(messageDiv);
+                });
+                
+                currentOffset = messages.length;
+                if (messages.length < 20) {
+                    hasMoreHistory = false;
+                }
+                
+                container.scrollTop = container.scrollHeight;
+            })
+            .catch(err => console.error('❌ Ошибка загрузки личного чата:', err));
+    }
+}
 
         function sendMessage() {
             const input = document.getElementById('messageInput');
