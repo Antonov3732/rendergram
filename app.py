@@ -26,7 +26,25 @@ socketio = SocketIO(app,
                    engineio_logger=False)
 
 user_sockets = {}
-
+@app.route('/test')
+def test_db():
+    try:
+        # Пробуем сохранить
+        result = db.save_general_message('test_user', 'тестовое сообщение')
+        if result:
+            # Пробуем загрузить
+            messages = db.get_general_messages(5)
+            return f"""
+            <h1>✅ ТЕСТ БД</h1>
+            <p>Сообщение сохранено! ID: {result['id']}</p>
+            <p>Всего сообщений: {len(messages)}</p>
+            <p>Последнее: {messages[-1]['text'] if messages else 'нет'}</p>
+            <pre>{messages}</pre>
+            """
+        else:
+            return "<h1>❌ Ошибка сохранения</h1>"
+    except Exception as e:
+        return f"<h1>❌ Ошибка: {e}</h1>"
 @app.route('/')
 def index():
     if 'username' in session:
