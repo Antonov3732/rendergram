@@ -6,94 +6,6 @@
     <title>EptaGram</title>
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
-        /* ============ ПОЛЬЗОВАТЕЛЬСКИЙ ФОН ============ */
-.messages {
-    position: relative;
-    background: #1a1a1a !important; /* Запасной фон */
-    transition: background-image 0.3s ease;
-}
-
-.messages::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: var(--user-bg, none);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.3; /* Прозрачность фона */
-    pointer-events: none;
-    z-index: 0;
-    transition: opacity 0.3s ease;
-}
-
-.messages > * {
-    position: relative;
-    z-index: 1;
-}
-
-/* Регулировка прозрачности */
-.bg-opacity-control {
-    position: fixed;
-    bottom: 80px;
-    right: 20px;
-    background: #0a0a0a;
-    border: 1px solid #2d2d2d;
-    border-radius: 12px;
-    padding: 15px;
-    z-index: 1000;
-    display: none;
-    width: 200px;
-}
-
-.bg-opacity-control.show {
-    display: block;
-}
-
-.bg-opacity-control input {
-    width: 100%;
-    margin: 10px 0;
-}
-
-/* Модальное окно для загрузки фона */
-.bg-upload-modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    align-items: center;
-    justify-content: center;
-}
-
-.bg-upload-modal.show {
-    display: flex;
-}
-
-.bg-upload-content {
-    background: #0a0a0a;
-    border: 1px solid #2d2d2d;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 500px;
-    padding: 20px;
-}
-
-.bg-preview {
-    width: 100%;
-    height: 200px;
-    border-radius: 8px;
-    margin: 15px 0;
-    background-size: cover;
-    background-position: center;
-    border: 1px solid #2d2d2d;
-}
         * {
             margin: 0;
             padding: 0;
@@ -687,109 +599,11 @@
             </div>
         </div>
     </div>
-        <script>
+    
+    <script>
+        // ============ ПОДКЛЮЧЕНИЕ WEBSOCKET ============
         const socket = io();
         const username = '{{ username }}';
-            <!-- Кнопки для управления фоном -->
-<button class="bg-toggle" onclick="toggleBgMenu()">🎨</button>
-
-<!-- Меню выбора фона -->
-<div class="bg-menu" id="bgMenu" style="display: none; position: fixed; bottom: 80px; right: 20px; background: #0a0a0a; border: 1px solid #2d2d2d; border-radius: 12px; padding: 10px; z-index: 1000;">
-    <button onclick="openBgUploadModal()" style="display: block; width: 100%; padding: 10px; margin-bottom: 5px; background: #2d2d2d; border: none; border-radius: 8px; color: #fff; cursor: pointer;">Загрузить фон</button>
-    <button onclick="removeBg()" style="display: block; width: 100%; padding: 10px; background: #2d2d2d; border: none; border-radius: 8px; color: #ff6666; cursor: pointer;">Удалить фон</button>
-    <button onclick="toggleOpacityControl()" style="display: block; width: 100%; padding: 10px; margin-top: 5px; background: #2d2d2d; border: none; border-radius: 8px; color: #fff; cursor: pointer;">Прозрачность</button>
-</div>
-
-<!-- Контроль прозрачности -->
-<div class="bg-opacity-control" id="opacityControl">
-    <label style="color: #fff; display: block; text-align: center;">Прозрачность</label>
-    <input type="range" id="bgOpacity" min="0" max="100" value="30" onchange="setBgOpacity(this.value)">
-    <span id="opacityValue" style="color: #fff; display: block; text-align: center;">30%</span>
-</div>
-
-<!-- Модальное окно для загрузки фона -->
-<div class="bg-upload-modal" id="bgUploadModal">
-    <div class="bg-upload-content">
-        <h3 style="color: #fff; margin-bottom: 15px;">Загрузить фон чата</h3>
-        
-        <div class="bg-preview" id="bgPreview"></div>
-        
-        <input type="file" id="bgImageUpload" accept="image/*" style="margin-bottom: 15px;">
-        
-        <div style="display: flex; gap: 10px;">
-            <button onclick="uploadBgImage()" style="flex: 1; padding: 12px; background: #00a884; border: none; border-radius: 8px; color: #fff; cursor: pointer;">Сохранить</button>
-            <button onclick="closeBgUploadModal()" style="flex: 1; padding: 12px; background: #2d2d2d; border: none; border-radius: 8px; color: #fff; cursor: pointer;">Отмена</button>
-        </div>
-        
-        <p class="upload-hint" style="color: #666; text-align: center; margin-top: 10px;">JPG, PNG до 5MB</p>
-    </div>
-</div>
-
-<style>
-.bg-toggle {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: #2d2d2d;
-    border: none;
-    color: #fff;
-    font-size: 24px;
-    cursor: pointer;
-    z-index: 999;
-    transition: background 0.2s;
-}
-
-.bg-toggle:hover {
-    background: #3d3d3d;
-}
-
-.bg-menu {
-    display: none;
-    flex-direction: column;
-}
-
-.bg-menu.show {
-    display: flex;
-}
-</style>
-          // ============ ЗАГРУЗКА ИСТОРИИ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ============
-window.addEventListener('load', function() {
-    console.log('🔄 Загружаю историю сообщений...');
-    
-    fetch('/api/messages')
-        .then(res => res.json())
-        .then(messages => {
-            console.log('📥 Загружено сообщений:', messages.length);
-            
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = ''; // Очищаем
-            
-            // УБИРАЕМ .reverse()!
-            messages.forEach(msg => {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-                
-                let senderHtml = '';
-                if (msg.from !== username) {
-                    senderHtml = `<div class="message-sender">${msg.from}</div>`;
-                }
-                
-                messageDiv.innerHTML = `
-                    ${senderHtml}
-                    <div class="message-bubble">${msg.text}</div>
-                    <div class="message-time">${msg.time}</div>
-                `;
-                
-                container.appendChild(messageDiv);
-            });
-            
-            container.scrollTop = container.scrollHeight;
-        })
-        .catch(err => console.error('❌ Ошибка загрузки истории:', err));
-});
         let currentChannel = 'general';
         let currentUser = null;
         let typingTimeout = null;
@@ -885,69 +699,69 @@ window.addEventListener('load', function() {
             }
         }
 
-      // ============ ЗАГРУЗКА ИСТОРИИ ПРИ СТАРТЕ ============
+        // ============ ЗАГРУЗКА ИСТОРИИ ПРИ СТАРТЕ ============
 
-function loadHistory() {
-    console.log('Загружаю историю сообщений...');
-    
-    loadUserAvatar();
-    
-    fetch('/api/messages')
-        .then(res => res.json())
-        .then(messages => {
-            console.log('Загружено сообщений:', messages.length);
+        function loadHistory() {
+            console.log('Загружаю историю сообщений...');
             
-            const container = document.getElementById('chatMessages');
-            container.innerHTML = '';
-            displayedMessageIds.clear();
+            loadUserAvatar();
             
-            // УБИРАЕМ .reverse()!
-            messages.forEach(msg => {
-                const msgId = `${msg.id}-${msg.from}-${msg.time}`;
-                displayedMessageIds.add(msgId);
-                
-                const messageDiv = document.createElement('div');
-                messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-                
-                let senderHtml = '';
-                if (msg.from !== username) {
-                    senderHtml = `<div class="message-sender">${msg.from}</div>`;
-                }
-                
-                messageDiv.innerHTML = `
-                    ${senderHtml}
-                    <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                    <div class="message-time">${msg.time}</div>
-                `;
-                
-                container.appendChild(messageDiv);
-            });
-            
-            currentOffset = messages.length;
-            if (messages.length < 20) {
-                hasMoreHistory = false;
-            }
-            
-            container.scrollTop = container.scrollHeight;
-        })
-        .catch(err => console.error('Ошибка загрузки истории:', err));
+            fetch('/api/messages')
+                .then(res => res.json())
+                .then(messages => {
+                    console.log('Загружено сообщений:', messages.length);
+                    
+                    const container = document.getElementById('chatMessages');
+                    container.innerHTML = '';
+                    displayedMessageIds.clear();
+                    
+                    messages.forEach(msg => {
+                        const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+                        displayedMessageIds.add(msgId);
+                        
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+                        
+                        let senderHtml = '';
+                        if (msg.from !== username) {
+                            senderHtml = `<div class="message-sender">${msg.from}</div>`;
+                        }
+                        
+                        messageDiv.innerHTML = `
+                            ${senderHtml}
+                            <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                            <div class="message-time">${msg.time}</div>
+                        `;
+                        
+                        container.appendChild(messageDiv);
+                    });
+                    
+                    currentOffset = messages.length;
+                    if (messages.length < 20) {
+                        hasMoreHistory = false;
+                    }
+                    
+                    container.scrollTop = container.scrollHeight;
+                })
+                .catch(err => console.error('Ошибка загрузки истории:', err));
 
-    fetch('/api/unread')
-        .then(res => res.json())
-        .then(unread => {
-            unreadMessages = unread;
-            for (let [user, count] of Object.entries(unread)) {
-                const badge = document.getElementById(`notify-${user}`);
-                if (badge && count > 0) {
-                    badge.style.display = 'inline';
-                    badge.textContent = count;
-                }
-            }
-        })
-        .catch(err => console.error('Ошибка загрузки непрочитанных:', err));
-}
+            fetch('/api/unread')
+                .then(res => res.json())
+                .then(unread => {
+                    unreadMessages = unread;
+                    for (let [user, count] of Object.entries(unread)) {
+                        const badge = document.getElementById(`notify-${user}`);
+                        if (badge && count > 0) {
+                            badge.style.display = 'inline';
+                            badge.textContent = count;
+                        }
+                    }
+                })
+                .catch(err => console.error('Ошибка загрузки непрочитанных:', err));
+        }
 
-loadHistory();
+        loadHistory();
+
         // ============ БЕСКОНЕЧНАЯ ПРОКРУТКА ============
         
         const messagesContainer = document.getElementById('chatMessages');
@@ -1035,118 +849,112 @@ loadHistory();
         }
 
         function switchChannel(channel) {
-    document.querySelectorAll('.channel').forEach(el => {
-        el.classList.remove('active');
-    });
+            document.querySelectorAll('.channel').forEach(el => {
+                el.classList.remove('active');
+            });
 
-    if (window.innerWidth <= 768) {
-        toggleSidebar();
-    }
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
 
-    currentOffset = 0;
-    hasMoreHistory = true;
-    isLoadingHistory = false;
+            currentOffset = 0;
+            hasMoreHistory = true;
+            isLoadingHistory = false;
 
-    if (channel === 'general') {
-        document.getElementById('chatHeader').innerHTML = 'Общий чат';
-        currentChannel = 'general';
-        currentUser = null;
+            if (channel === 'general') {
+                document.getElementById('chatHeader').innerHTML = 'Общий чат';
+                currentChannel = 'general';
+                currentUser = null;
 
-        // Очищаем контейнер
-        const container = document.getElementById('chatMessages');
-        container.innerHTML = '';
-        displayedMessageIds.clear();
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+                displayedMessageIds.clear();
 
-        // Загружаем общие сообщения
-        fetch('/api/messages')
-            .then(res => res.json())
-            .then(messages => {
-                console.log('📥 Загружено общих сообщений:', messages.length);
-                
-                // НЕ ПЕРЕВОРАЧИВАЕМ! Оставляем как есть
-                messages.forEach(msg => {
-                    const msgId = `${msg.id}-${msg.from}-${msg.time}`;
-                    displayedMessageIds.add(msgId);
+                fetch('/api/messages')
+                    .then(res => res.json())
+                    .then(messages => {
+                        console.log('📥 Загружено общих сообщений:', messages.length);
+                        
+                        messages.forEach(msg => {
+                            const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+                            displayedMessageIds.add(msgId);
+                            
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+                            
+                            let senderHtml = '';
+                            if (msg.from !== username) {
+                                senderHtml = `<div class="message-sender">${msg.from}</div>`;
+                            }
+                            
+                            messageDiv.innerHTML = `
+                                ${senderHtml}
+                                <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                                <div class="message-time">${msg.time}</div>
+                            `;
+                            
+                            container.appendChild(messageDiv);
+                        });
+                        
+                        currentOffset = messages.length;
+                        if (messages.length < 20) {
+                            hasMoreHistory = false;
+                        }
+                        
+                        container.scrollTop = container.scrollHeight;
+                    })
+                    .catch(err => console.error('❌ Ошибка загрузки общего чата:', err));
                     
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-                    
-                    let senderHtml = '';
-                    if (msg.from !== username) {
-                        senderHtml = `<div class="message-sender">${msg.from}</div>`;
-                    }
-                    
-                    messageDiv.innerHTML = `
-                        ${senderHtml}
-                        <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                        <div class="message-time">${msg.time}</div>
-                    `;
-                    
-                    container.appendChild(messageDiv);
-                });
-                
-                currentOffset = messages.length;
-                if (messages.length < 20) {
-                    hasMoreHistory = false;
-                }
-                
-                // Прокрутка вниз (к последним сообщениям)
-                container.scrollTop = container.scrollHeight;
-            })
-            .catch(err => console.error('❌ Ошибка загрузки общего чата:', err));
-            
-    } else {
-        document.getElementById('chatHeader').innerHTML = `${channel}`;
-        currentChannel = 'private';
-        currentUser = channel;
-        document.getElementById(`user-${channel}`).classList.add('active');
+            } else {
+                document.getElementById('chatHeader').innerHTML = `${channel}`;
+                currentChannel = 'private';
+                currentUser = channel;
+                document.getElementById(`user-${channel}`).classList.add('active');
 
-        const badge = document.getElementById(`notify-${channel}`);
-        if (badge) badge.style.display = 'none';
+                const badge = document.getElementById(`notify-${channel}`);
+                if (badge) badge.style.display = 'none';
 
-        // Очищаем контейнер
-        const container = document.getElementById('chatMessages');
-        container.innerHTML = '';
-        displayedMessageIds.clear();
+                const container = document.getElementById('chatMessages');
+                container.innerHTML = '';
+                displayedMessageIds.clear();
 
-        // Загружаем личные сообщения
-        fetch(`/api/private/${channel}`)
-            .then(res => res.json())
-            .then(messages => {
-                console.log('📥 Загружено личных сообщений:', messages.length);
-                
-                // НЕ ПЕРЕВОРАЧИВАЕМ! Оставляем как есть
-                messages.forEach(msg => {
-                    const msgId = `${msg.id}-${msg.from}-${msg.time}-private`;
-                    displayedMessageIds.add(msgId);
-                    
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-                    
-                    let senderHtml = '';
-                    if (msg.from !== username) {
-                        senderHtml = `<div class="message-sender">${msg.from}</div>`;
-                    }
-                    
-                    messageDiv.innerHTML = `
-                        ${senderHtml}
-                        <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                        <div class="message-time">${msg.time}</div>
-                    `;
-                    
-                    container.appendChild(messageDiv);
-                });
-                
-                currentOffset = messages.length;
-                if (messages.length < 20) {
-                    hasMoreHistory = false;
-                }
-                
-                container.scrollTop = container.scrollHeight;
-            })
-            .catch(err => console.error('❌ Ошибка загрузки личного чата:', err));
-    }
-}
+                fetch(`/api/private/${channel}`)
+                    .then(res => res.json())
+                    .then(messages => {
+                        console.log('📥 Загружено личных сообщений:', messages.length);
+                        
+                        messages.forEach(msg => {
+                            const msgId = `${msg.id}-${msg.from}-${msg.time}-private`;
+                            displayedMessageIds.add(msgId);
+                            
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+                            
+                            let senderHtml = '';
+                            if (msg.from !== username) {
+                                senderHtml = `<div class="message-sender">${msg.from}</div>`;
+                            }
+                            
+                            messageDiv.innerHTML = `
+                                ${senderHtml}
+                                <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                                <div class="message-time">${msg.time}</div>
+                            `;
+                            
+                            container.appendChild(messageDiv);
+                        });
+                        
+                        currentOffset = messages.length;
+                        if (messages.length < 20) {
+                            hasMoreHistory = false;
+                        }
+                        
+                        container.scrollTop = container.scrollHeight;
+                    })
+                    .catch(err => console.error('❌ Ошибка загрузки личного чата:', err));
+            }
+        }
+
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
@@ -1165,92 +973,38 @@ loadHistory();
             input.value = '';
         }
 
-       // ============ ФУНКЦИИ СОЗДАНИЯ СООБЩЕНИЙ С АВАТАРКАМИ ============
+        // ============ ФУНКЦИИ СОЗДАНИЯ СООБЩЕНИЙ ============
 
-function createMessageElement(msg) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-    
-    // Получаем аватар отправителя
-    let senderAvatar = '';
-    let senderName = msg.from;
-    
-    if (msg.from !== username) {
-        // Ищем элемент пользователя в списке
-        const userElement = document.getElementById(`user-${msg.from}`);
-        if (userElement) {
-            const avatarImg = userElement.querySelector('.user-avatar-small');
-            if (avatarImg) {
-                senderAvatar = avatarImg.src;
+        function createMessageElement(msg) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+            
+            let senderAvatar = '';
+            if (msg.from !== username) {
+                const userElement = document.getElementById(`user-${msg.from}`);
+                if (userElement) {
+                    const avatarImg = userElement.querySelector('.user-avatar-small');
+                    if (avatarImg) {
+                        senderAvatar = avatarImg.src;
+                    }
+                }
             }
+            
+            messageDiv.innerHTML = `
+                ${msg.from !== username ? `
+                    <div class="message-sender">
+                        <img class="user-avatar-small" src="${senderAvatar}" 
+                             onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
+                        ${escapeHtml(msg.from)}
+                    </div>
+                ` : ''}
+                <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
+            `;
+            
+            return messageDiv;
         }
-    }
-    
-    // Формируем HTML
-    let senderHtml = '';
-    if (msg.from !== username) {
-        // Для чужих сообщений - аватарка слева
-        senderHtml = `
-            <div class="message-sender">
-                <img class="user-avatar-small" src="${senderAvatar || '/default-avatar.png'}" 
-                     onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
-                ${escapeHtml(senderName)}
-            </div>
-        `;
-    } else {
-        // Для своих сообщений - только имя (аватарка не нужна, она в профиле)
-        senderHtml = ''; // Можно оставить пустым или добавить "Вы"
-    }
-    
-    messageDiv.innerHTML = `
-        ${senderHtml}
-        <div class="message-bubble">${escapeHtml(msg.text)}</div>
-        <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
-    `;
-    
-    return messageDiv;
-}
 
-function createPrivateMessageElement(msg) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
-    
-    // Получаем аватар отправителя
-    let senderAvatar = '';
-    let senderName = msg.from;
-    
-    if (msg.from !== username) {
-        const userElement = document.getElementById(`user-${msg.from}`);
-        if (userElement) {
-            const avatarImg = userElement.querySelector('.user-avatar-small');
-            if (avatarImg) {
-                senderAvatar = avatarImg.src;
-            }
-        }
-    }
-    
-    // Формируем HTML
-    let senderHtml = '';
-    if (msg.from !== username) {
-        senderHtml = `
-            <div class="message-sender">
-                <img class="user-avatar-small" src="${senderAvatar || '/default-avatar.png'}" 
-                     onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><circle cx=%2212%22 cy=%228%22 r=%224%22/><path d=%22M12 14c-4 0-6 2-6 4h12c0-2-2-4-6-4z%22/></svg>'">
-                ${escapeHtml(senderName)}
-            </div>
-        `;
-    } else {
-        senderHtml = ''; // Свои сообщения без аватарки
-    }
-    
-    messageDiv.innerHTML = `
-        ${senderHtml}
-        <div class="message-bubble">${escapeHtml(msg.text)}</div>
-        <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
-    `;
-    
-    return messageDiv;
-}
         function createPrivateMessageElement(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
@@ -1503,164 +1257,6 @@ function createPrivateMessageElement(msg) {
         });
 
         console.log('Чат загружен, пользователь:', username);
-            // ============ ФУНКЦИИ ДЛЯ ПОЛЬЗОВАТЕЛЬСКОГО ФОНА ============
-
-let currentBgOpacity = 30;
-
-// Загрузка сохраненного фона
-async function loadUserBackground() {
-    try {
-        const response = await fetch(`/api/bg-image/${username}`);
-        const data = await response.json();
-        if (data.image) {
-            setBackgroundImage(data.image);
-        }
-    } catch (error) {
-        console.error('Ошибка загрузки фона:', error);
-    }
-}
-
-// Установка фонового изображения
-function setBackgroundImage(imageBase64) {
-    const messagesDiv = document.getElementById('chatMessages');
-    messagesDiv.style.setProperty('--user-bg', `url("${imageBase64}")`);
-}
-
-// Открыть/закрыть меню фона
-function toggleBgMenu() {
-    const menu = document.getElementById('bgMenu');
-    menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
-}
-
-// Открыть модалку загрузки
-function openBgUploadModal() {
-    document.getElementById('bgUploadModal').classList.add('show');
-    toggleBgMenu(); // Закрываем меню
-}
-
-// Закрыть модалку
-function closeBgUploadModal() {
-    document.getElementById('bgUploadModal').classList.remove('show');
-    document.getElementById('bgPreview').style.backgroundImage = '';
-}
-
-// Предпросмотр выбранного изображения
-document.getElementById('bgImageUpload').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    if (file.size > 5 * 1024 * 1024) {
-        alert('Файл слишком большой. Максимум 5MB');
-        return;
-    }
-    
-    if (!file.type.startsWith('image/')) {
-        alert('Можно загружать только изображения');
-        return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        document.getElementById('bgPreview').style.backgroundImage = `url("${e.target.result}")`;
-    };
-    reader.readAsDataURL(file);
-});
-
-// Загрузка фона на сервер
-async function uploadBgImage() {
-    const preview = document.getElementById('bgPreview');
-    const bgImage = preview.style.backgroundImage;
-    
-    if (!bgImage || bgImage === 'none') {
-        alert('Сначала выберите изображение');
-        return;
-    }
-    
-    // Извлекаем base64 из url()
-    const base64 = bgImage.slice(5, -2);
-    
-    try {
-        const response = await fetch('/api/bg-image', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ image: base64 })
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            setBackgroundImage(base64);
-            closeBgUploadModal();
-            console.log('✅ Фон сохранен');
-        } else {
-            alert('Ошибка загрузки фона');
-        }
-    } catch (error) {
-        alert('Ошибка соединения');
-    }
-}
-
-// Удалить фон
-async function removeBg() {
-    if (confirm('Удалить фоновое изображение?')) {
-        try {
-            const response = await fetch('/api/bg-image', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ image: null })
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                const messagesDiv = document.getElementById('chatMessages');
-                messagesDiv.style.removeProperty('--user-bg');
-                toggleBgMenu();
-            }
-        } catch (error) {
-            alert('Ошибка удаления фона');
-        }
-    }
-}
-
-// Контроль прозрачности
-function toggleOpacityControl() {
-    document.getElementById('opacityControl').classList.toggle('show');
-    toggleBgMenu();
-}
-
-function setBgOpacity(value) {
-    currentBgOpacity = value;
-    document.getElementById('opacityValue').textContent = value + '%';
-    
-    const messagesDiv = document.getElementById('chatMessages');
-    messagesDiv.style.setProperty('--user-bg-opacity', value / 100);
-    
-    // Обновляем opacity в псевдоэлементе
-    const style = document.createElement('style');
-    style.textContent = `
-        .messages::before {
-            opacity: ${value / 100} !important;
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Загружаем фон при старте
-loadUserBackground();
-
-// Добавляем CSS переменную для opacity
-const style = document.createElement('style');
-style.textContent = `
-    .messages::before {
-        opacity: var(--user-bg-opacity, 0.3);
-    }
-`;
-document.head.appendChild(style);
     </script>
 </body>
 </html>
