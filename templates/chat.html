@@ -458,6 +458,16 @@
     </div>
 
     <script>
+
+// ПРОВЕРКА WEBSOCKET
+console.log('Connecting to WebSocket...');
+socket.on('connect', function() {
+    console.log('✅ WebSocket connected!');
+});
+socket.on('connect_error', function(error) {
+    console.error('❌ WebSocket error:', error);
+});
+
         const socket = io();
         const username = '{{ username }}';
         let currentChannel = 'general';
