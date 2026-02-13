@@ -901,22 +901,22 @@ loadHistory();
         currentChannel = 'general';
         currentUser = null;
 
-        // Очищаем контейнер и Set
+        // Очищаем контейнер
         const container = document.getElementById('chatMessages');
         container.innerHTML = '';
         displayedMessageIds.clear();
 
-        // ЗАГРУЖАЕМ ОБЩИЕ СООБЩЕНИЯ
+        // Загружаем общие сообщения
         fetch('/api/messages')
             .then(res => res.json())
             .then(messages => {
                 console.log('📥 Загружено общих сообщений:', messages.length);
                 
-                messages.reverse().forEach(msg => {
+                // НЕ ПЕРЕВОРАЧИВАЕМ! Оставляем как есть
+                messages.forEach(msg => {
                     const msgId = `${msg.id}-${msg.from}-${msg.time}`;
                     displayedMessageIds.add(msgId);
                     
-                    // Прямое создание сообщения (как в loadHistory)
                     const messageDiv = document.createElement('div');
                     messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
                     
@@ -939,7 +939,7 @@ loadHistory();
                     hasMoreHistory = false;
                 }
                 
-                // Прокрутка вниз
+                // Прокрутка вниз (к последним сообщениям)
                 container.scrollTop = container.scrollHeight;
             })
             .catch(err => console.error('❌ Ошибка загрузки общего чата:', err));
@@ -953,22 +953,22 @@ loadHistory();
         const badge = document.getElementById(`notify-${channel}`);
         if (badge) badge.style.display = 'none';
 
-        // Очищаем контейнер и Set
+        // Очищаем контейнер
         const container = document.getElementById('chatMessages');
         container.innerHTML = '';
         displayedMessageIds.clear();
 
-        // ЗАГРУЖАЕМ ЛИЧНЫЕ СООБЩЕНИЯ
+        // Загружаем личные сообщения
         fetch(`/api/private/${channel}`)
             .then(res => res.json())
             .then(messages => {
                 console.log('📥 Загружено личных сообщений:', messages.length);
                 
-                messages.reverse().forEach(msg => {
+                // НЕ ПЕРЕВОРАЧИВАЕМ! Оставляем как есть
+                messages.forEach(msg => {
                     const msgId = `${msg.id}-${msg.from}-${msg.time}-private`;
                     displayedMessageIds.add(msgId);
                     
-                    // Прямое создание сообщения
                     const messageDiv = document.createElement('div');
                     messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
                     
@@ -996,7 +996,6 @@ loadHistory();
             .catch(err => console.error('❌ Ошибка загрузки личного чата:', err));
     }
 }
-
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
