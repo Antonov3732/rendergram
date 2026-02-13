@@ -731,47 +731,71 @@ window.addEventListener('load', function() {
             }
         }
 
-        // ============ ЗАГРУЗКА ИСТОРИИ ПРИ СТАРТЕ ============
-        
-        function loadHistory() {
-            console.log('Загружаю историю сообщений...');
-            
-            loadUserAvatar();
-            
-            fetch('/api/messages?limit=20')
-                .then(res => res.json())
-                .then(messages => {
-                    console.log('Загружено сообщений:', messages.length);
-                    messages.forEach(msg => {
-                        const msgId = `${msg.id}-${msg.from}-${msg.time}`;
-                        if (!displayedMessageIds.has(msgId)) {
-                            displayedMessageIds.add(msgId);
-                            displayMessage(msg);
-                        }
-                    });
-                    currentOffset = messages.length;
-                    if (messages.length < 20) {
-                        hasMoreHistory = false;
-                    }
-                })
-                .catch(err => console.error('Ошибка загрузки истории:', err));
+       // ============ ЗАГРУЗКА ИСТОРИИ ПРИ СТАРТЕ ============
 
-            fetch('/api/unread')
-                .then(res => res.json())
-                .then(unread => {
-                    unreadMessages = unread;
-                    for (let [user, count] of Object.entries(unread)) {
-                        const badge = document.getElementById(`notify-${user}`);
-                        if (badge && count > 0) {
-                            badge.style.display = 'inline';
-                            badge.textContent = count;
-                        }
-                    }
-                })
-                .catch(err => console.error('Ошибка загрузки непрочитанных:', err));
-        }
+function loadHistory() {
+    console.log('Загружаю историю сообщений...');
+    
+    loadUserAvatar();
+    
+    fetch('/api/messages')
+        .then(res => res.json())
+        .then(messages => {
+            console.log('Загружено сообщений:', messages.length);
+            
+            // ОЧИЩАЕМ контейнер перед загрузкой
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+            displayedMessageIds.clear();
+            
+            messages.reverse().forEach(msg => {
+                const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+                displayedMessageIds.add(msgId);
+                
+                // ИСПОЛЬЗУЕМ ПРЯМОЕ СОЗДАНИЕ (как в твоем рабочем коде)
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
+                
+                let senderHtml = '';
+                if (msg.from !== username) {
+                    senderHtml = `<div class="message-sender">${msg.from}</div>`;
+                }
+                
+                messageDiv.innerHTML = `
+                    ${senderHtml}
+                    <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                    <div class="message-time">${msg.time}</div>
+                `;
+                
+                container.appendChild(messageDiv);
+            });
+            
+            currentOffset = messages.length;
+            if (messages.length < 20) {
+                hasMoreHistory = false;
+            }
+            
+            // Прокрутка вниз
+            container.scrollTop = container.scrollHeight;
+        })
+        .catch(err => console.error('Ошибка загрузки истории:', err));
 
-        loadHistory();
+    fetch('/api/unread')
+        .then(res => res.json())
+        .then(unread => {
+            unreadMessages = unread;
+            for (let [user, count] of Object.entries(unread)) {
+                const badge = document.getElementById(`notify-${user}`);
+                if (badge && count > 0) {
+                    badge.style.display = 'inline';
+                    badge.textContent = count;
+                }
+            }
+        })
+        .catch(err => console.error('Ошибка загрузки непрочитанных:', err));
+}
+
+loadHistory();
 
         // ============ БЕСКОНЕЧНАЯ ПРОКРУТКА ============
         
