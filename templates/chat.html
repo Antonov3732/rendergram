@@ -600,7 +600,7 @@
         </div>
     </div>
         <script>
-            // ============ ЗАГРУЗКА ИСТОРИИ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ============
+          // ============ ЗАГРУЗКА ИСТОРИИ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ============
 window.addEventListener('load', function() {
     console.log('🔄 Загружаю историю сообщений...');
     
@@ -612,7 +612,8 @@ window.addEventListener('load', function() {
             const container = document.getElementById('chatMessages');
             container.innerHTML = ''; // Очищаем
             
-            messages.reverse().forEach(msg => {
+            // УБИРАЕМ .reverse()!
+            messages.forEach(msg => {
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
                 
@@ -731,7 +732,7 @@ window.addEventListener('load', function() {
             }
         }
 
-       // ============ ЗАГРУЗКА ИСТОРИИ ПРИ СТАРТЕ ============
+      // ============ ЗАГРУЗКА ИСТОРИИ ПРИ СТАРТЕ ============
 
 function loadHistory() {
     console.log('Загружаю историю сообщений...');
@@ -743,16 +744,15 @@ function loadHistory() {
         .then(messages => {
             console.log('Загружено сообщений:', messages.length);
             
-            // ОЧИЩАЕМ контейнер перед загрузкой
             const container = document.getElementById('chatMessages');
             container.innerHTML = '';
             displayedMessageIds.clear();
             
-            messages.reverse().forEach(msg => {
+            // УБИРАЕМ .reverse()!
+            messages.forEach(msg => {
                 const msgId = `${msg.id}-${msg.from}-${msg.time}`;
                 displayedMessageIds.add(msgId);
                 
-                // ИСПОЛЬЗУЕМ ПРЯМОЕ СОЗДАНИЕ (как в твоем рабочем коде)
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
                 
@@ -775,7 +775,6 @@ function loadHistory() {
                 hasMoreHistory = false;
             }
             
-            // Прокрутка вниз
             container.scrollTop = container.scrollHeight;
         })
         .catch(err => console.error('Ошибка загрузки истории:', err));
@@ -796,7 +795,6 @@ function loadHistory() {
 }
 
 loadHistory();
-
         // ============ БЕСКОНЕЧНАЯ ПРОКРУТКА ============
         
         const messagesContainer = document.getElementById('chatMessages');
