@@ -2,23 +2,26 @@ import os
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime, timezone
+import hashlib
+import base64
 
-# Берем строку подключения из переменной окружения
+# База данных
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 def get_db():
-    """Подключение к PostgreSQL"""
     return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
 
 def init_db():
-    """Создает таблицы при первом запуске"""
+    """Создает все таблицы"""
     conn = get_db()
     cur = conn.cursor()
     
-    # Таблица пользователей
+    # Таблица пользователей (добавлены пароль и аватар)
     cur.execute('''
         CREATE TABLE IF NOT EXISTS users (
             username TEXT PRIMARY KEY,
+            password TEXT NOT NULL,
+            avatar TEXT,
             online INTEGER DEFAULT 0,
             last_seen TEXT,
             registered TEXT
@@ -51,18 +54,31 @@ def init_db():
     
     conn.commit()
     conn.close()
-    print("✅ PostgreSQL база данных инициализирована")
+    print("✅ База данных инициализирована")
+
+# ============ ХЕЛПЕРЫ ============
+
+def hash_password(password):
+    """Хеширование пароля"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def validate_password(password, hash):
+    """Проверка пароля"""
+    return hash_password(password) == hash
 
 # ============ ПОЛЬЗОВАТЕЛИ ============
 
-def add_user(username):
+def add_user(username, password):
+    """Добавляет нового пользователя с паролем"""
     try:
         conn = get_db()
         cur = conn.cursor()
         now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
+        password_hash = hash_password(password)
+        
         cur.execute(
-            'INSERT INTO users (username, registered, last_seen) VALUES (%s, %s, %s)',
-            (username, now, now)
+            'INSERT INTO users (username, password, registered, last_seen) VALUES (%s, %s, %s, %s)',
+            (username, password_hash, now, now)
         )
         conn.commit()
         conn.close()
@@ -74,6 +90,48 @@ def add_user(username):
     except Exception as e:
         print(f"❌ Ошибка добавления пользователя: {e}")
         return False
+
+def check_user(username, password):
+    """Проверяет логин и пароль"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT password FROM users WHERE username = %s', (username,))
+        result = cur.fetchone()
+        conn.close()
+        
+        if result and validate_password(password, result['password']):
+            return True
+        return False
+    except Exception as e:
+        print(f"❌ Ошибка проверки пользователя: {e}")
+        return False
+
+def update_avatar(username, avatar_base64):
+    """Обновляет аватар пользователя"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('UPDATE users SET avatar = %s WHERE username = %s', (avatar_base64, username))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"❌ Ошибка обновления аватара: {e}")
+        return False
+
+def get_avatar(username):
+    """Получает аватар пользователя"""
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute('SELECT avatar FROM users WHERE username = %s', (username,))
+        result = cur.fetchone()
+        conn.close()
+        return result['avatar'] if result else None
+    except Exception as e:
+        print(f"❌ Ошибка получения аватара: {e}")
+        return None
 
 def set_user_online(username, online=True):
     try:
@@ -93,12 +151,10 @@ def get_all_users():
     try:
         conn = get_db()
         cur = conn.cursor()
-        cur.execute('SELECT username, online FROM users ORDER BY username')
+        cur.execute('SELECT username, online, avatar FROM users ORDER BY username')
         rows = cur.fetchall()
         conn.close()
-        users = [{'username': row['username'], 'online': row['online']} for row in rows]
-        print(f"📋 Загружено {len(users)} пользователей")
-        return users
+        return [{'username': row['username'], 'online': row['online'], 'avatar': row['avatar']} for row in rows]
     except Exception as e:
         print(f"❌ Ошибка загрузки пользователей: {e}")
         return []
