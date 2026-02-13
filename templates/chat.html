@@ -688,6 +688,8 @@
         </div>
     </div>
         <script>
+        const socket = io();
+        const username = '{{ username }}';
             <!-- Кнопки для управления фоном -->
 <button class="bg-toggle" onclick="toggleBgMenu()">🎨</button>
 
@@ -788,8 +790,6 @@ window.addEventListener('load', function() {
         })
         .catch(err => console.error('❌ Ошибка загрузки истории:', err));
 });
-        const socket = io();
-        const username = '{{ username }}';
         let currentChannel = 'general';
         let currentUser = null;
         let typingTimeout = null;
