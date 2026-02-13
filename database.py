@@ -88,9 +88,11 @@ def get_user_status(username):
 def save_general_message(username, text):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    # ✅ ТОЛЬКО ВРЕМЯ, БЕЗ ДАТЫ (ЧЧ:ММ)
+    # ✅ ТОЛЬКО ВРЕМЯ ЧЧ:ММ В UTC
     now_time = datetime.now(pytz.UTC).strftime('%H:%M')
     now_date = datetime.now(pytz.UTC).strftime('%d.%m.%Y')
+    
+    # ✅ СОХРАНЯЕМ В БАЗУ!
     c.execute('''INSERT INTO general_messages (username, text, time, date)
                  VALUES (?, ?, ?, ?)''', (username, text, now_time, now_date))
     message_id = c.lastrowid
@@ -100,9 +102,9 @@ def save_general_message(username, text):
     return {
         'id': message_id,
         'from': username,
-        'text': text,
-        'time': now_time,  # ✅ Только ЧЧ:ММ в UTC
-        'date': now_date   # ✅ Дата отдельно
+        'text': text,        # ✅ ТЕКСТ СООБЩЕНИЯ!
+        'time': now_time,    # ✅ ТОЛЬКО ВРЕМЯ
+        'date': now_date     # ✅ ДАТА
     }
 
 def get_general_messages(limit=50):
@@ -116,9 +118,9 @@ def get_general_messages(limit=50):
         messages.append({
             'id': row[0],
             'from': row[1],
-            'text': row[2],
-            'time': row[3],  # ✅ ЧЧ:ММ в UTC
-            'date': row[4]   # ✅ Дата
+            'text': row[2],   # ✅ ТЕКСТ ИЗ БАЗЫ!
+            'time': row[3],   # ✅ ВРЕМЯ ИЗ БАЗЫ
+            'date': row[4]    # ✅ ДАТА ИЗ БАЗЫ
         })
     conn.close()
     return messages
@@ -128,9 +130,11 @@ def get_general_messages(limit=50):
 def save_private_message(from_user, to_user, text):
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    # ✅ ТОЛЬКО ВРЕМЯ, БЕЗ ДАТЫ (ЧЧ:ММ)
+    # ✅ ТОЛЬКО ВРЕМЯ ЧЧ:ММ В UTC
     now_time = datetime.now(pytz.UTC).strftime('%H:%M')
     now_date = datetime.now(pytz.UTC).strftime('%d.%m.%Y')
+    
+    # ✅ СОХРАНЯЕМ В БАЗУ!
     c.execute('''INSERT INTO private_messages (from_user, to_user, text, time, date, is_read)
                  VALUES (?, ?, ?, ?, ?, 0)''', (from_user, to_user, text, now_time, now_date))
     message_id = c.lastrowid
@@ -141,9 +145,9 @@ def save_private_message(from_user, to_user, text):
         'id': message_id,
         'from': from_user,
         'to': to_user,
-        'text': text,
-        'time': now_time,  # ✅ Только ЧЧ:ММ в UTC
-        'date': now_date   # ✅ Дата отдельно
+        'text': text,        # ✅ ТЕКСТ СООБЩЕНИЯ!
+        'time': now_time,    # ✅ ТОЛЬКО ВРЕМЯ
+        'date': now_date     # ✅ ДАТА
     }
 
 def get_private_messages(user1, user2, limit=50):
@@ -159,9 +163,9 @@ def get_private_messages(user1, user2, limit=50):
             'id': row[0],
             'from': row[1],
             'to': row[2],
-            'text': row[3],
-            'time': row[4],  # ✅ ЧЧ:ММ в UTC
-            'date': row[5]   # ✅ Дата
+            'text': row[3],   # ✅ ТЕКСТ ИЗ БАЗЫ!
+            'time': row[4],   # ✅ ВРЕМЯ ИЗ БАЗЫ
+            'date': row[5]    # ✅ ДАТА ИЗ БАЗЫ
         })
     conn.close()
     return messages
