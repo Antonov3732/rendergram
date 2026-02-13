@@ -246,15 +246,55 @@
             }
         }
 
-       .messages {
+/* ============ ФОН ЧАТА ============ */
+.messages {
     flex: 1;
     overflow-y: auto;
     padding: clamp(16px, 4vw, 24px);
     display: flex;
     flex-direction: column;
     gap: clamp(12px, 3vw, 16px);
-    background: #000000;  /* ← ДОБАВЬ ЭТУ СТРОКУ */
-    position: relative;    /* ← ЭТО ДЛЯ ФОНА (уже должно быть ниже) */
+    background: #000000;  /* черный фон по умолчанию */
+    position: relative;
+    min-height: 100%;
+}
+
+/* Контейнер для фоновой картинки ТОЛЬКО в области сообщений */
+.messages.has-bg-image {
+    background: transparent;  /* убираем черный фон */
+    position: relative;
+}
+
+.messages.has-bg-image::before {
+    content: '';
+    position: absolute;  /* absolute внутри контейнера */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: var(--user-bg);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;  /* фиксируем */
+    opacity: var(--bg-opacity, 0.3);
+    pointer-events: none;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+}
+
+/* Сами сообщения - ПОВЕРХ картинки */
+.messages > * {
+    position: relative;
+    z-index: 2;
+}
+
+/* Для мобилок */
+@media (max-width: 768px) {
+    .messages.has-bg-image::before {
+        background-attachment: fixed;  /* тоже фиксируем */
+    }
 }
 
         .message {
@@ -699,31 +739,6 @@
     cursor: pointer;
 }
 
-/* Фон сообщений с картинкой */
-.messages.has-bg-image {
-    position: relative;
-    background: #1a1a1a;  /* этот фон только когда есть картинка */
-}
-
-.messages.has-bg-image::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: var(--user-bg);
-    background-size: cover;
-    background-position: center;
-    opacity: var(--bg-opacity, 0.3);
-    pointer-events: none;
-    z-index: 0;
-}
-
-.messages > * {
-    position: relative;
-    z-index: 1;
-}
     </style>
 </head>
 <body>
