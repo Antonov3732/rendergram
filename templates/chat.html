@@ -515,6 +515,221 @@
                 padding: 10px 16px;
             }
         }
+        /* ============ МЕНЮ ФОНА ============ */
+.bg-toggle {
+    position: fixed;
+    bottom: 80px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #2d2d2d;
+    border: none;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 999;
+    transition: background 0.2s;
+}
+
+.bg-toggle:hover {
+    background: #3d3d3d;
+}
+
+.bg-menu {
+    position: fixed;
+    bottom: 140px;
+    right: 20px;
+    width: 320px;
+    max-height: 500px;
+    background: #0a0a0a;
+    border: 1px solid #2d2d2d;
+    border-radius: 16px;
+    z-index: 1000;
+    display: none;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.bg-menu.show {
+    display: block;
+}
+
+.bg-menu-header {
+    padding: 15px 20px;
+    background: #111;
+    border-bottom: 1px solid #2d2d2d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.bg-menu-header h4 {
+    color: #fff;
+    font-size: 16px;
+}
+
+.bg-menu-header .close {
+    color: #666;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.bg-menu-content {
+    padding: 15px;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.bg-section {
+    margin-bottom: 20px;
+}
+
+.bg-section h5 {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.bg-patterns {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.bg-option {
+    cursor: pointer;
+    text-align: center;
+}
+
+.bg-preview {
+    width: 100%;
+    height: 60px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    transition: border-color 0.2s;
+    margin-bottom: 5px;
+}
+
+.bg-option:hover .bg-preview {
+    border-color: #666;
+}
+
+.bg-option.selected .bg-preview {
+    border-color: #00ff88;
+}
+
+.bg-option span {
+    color: #ccc;
+    font-size: 12px;
+}
+
+/* Превью тем */
+.bg-preview.default { background: #1a1a1a; }
+.bg-preview.dark-gradient { background: linear-gradient(135deg, #1a1a1a, #0a0a0a); }
+.bg-preview.space { background: linear-gradient(135deg, #0a0a1a, #1a1a2a); }
+.bg-preview.forest { background: linear-gradient(135deg, #1a2a1a, #2a3a2a); }
+.bg-preview.ocean { background: linear-gradient(135deg, #1a1a2a, #1a2a3a); }
+.bg-preview.grid { 
+    background-image: linear-gradient(#fff 1px, transparent 1px),
+                      linear-gradient(90deg, #fff 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: #1a1a1a;
+}
+.bg-preview.dots {
+    background-image: radial-gradient(#fff 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-color: #1a1a1a;
+}
+
+/* Своя картинка */
+.custom-bg {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.upload-bg-btn {
+    padding: 12px;
+    background: #2d2d2d;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.upload-bg-btn:hover {
+    background: #3d3d3d;
+}
+
+#customBgPreview {
+    width: 100%;
+    height: 120px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 8px;
+    border: 1px solid #2d2d2d;
+}
+
+.opacity-control {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.opacity-control label {
+    color: #888;
+    font-size: 13px;
+}
+
+.opacity-control input {
+    width: 100%;
+}
+
+.save-bg-btn {
+    padding: 10px;
+    background: #00a884;
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+}
+
+.remove-bg-btn {
+    padding: 10px;
+    background: #2d2d2d;
+    border: none;
+    border-radius: 8px;
+    color: #ff6666;
+    cursor: pointer;
+}
+
+/* Фон сообщений с картинкой */
+.messages {
+    position: relative;
+    background: #1a1a1a;
+}
+
+.messages.has-bg-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: var(--user-bg);
+    background-size: cover;
+    background-position: center;
+    opacity: var(--bg-opacity, 0.3);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.messages > * {
+    position: relative;
+    z-index: 1;
+}
     </style>
 </head>
 <body>
@@ -599,6 +814,69 @@
             </div>
         </div>
     </div>
+
+    <!-- Кнопка для открытия меню фона -->
+<button class="bg-toggle" onclick="toggleBgMenu()">🎨</button>
+
+<!-- Меню выбора фона -->
+<div class="bg-menu" id="bgMenu">
+    <div class="bg-menu-header">
+        <h4>Фон чата</h4>
+        <span class="close" onclick="toggleBgMenu()">&times;</span>
+    </div>
+    <div class="bg-menu-content">
+        <div class="bg-section">
+            <h5>Готовые темы</h5>
+            <div class="bg-patterns">
+                <div class="bg-option default" onclick="setPattern('default')" title="Стандартный">
+                    <div class="bg-preview default"></div>
+                    <span>Стандарт</span>
+                </div>
+                <div class="bg-option dark-gradient" onclick="setPattern('dark-gradient')" title="Темный градиент">
+                    <div class="bg-preview dark-gradient"></div>
+                    <span>Градиент</span>
+                </div>
+                <div class="bg-option space" onclick="setPattern('space')" title="Космос">
+                    <div class="bg-preview space"></div>
+                    <span>Космос</span>
+                </div>
+                <div class="bg-option forest" onclick="setPattern('forest')" title="Лес">
+                    <div class="bg-preview forest"></div>
+                    <span>Лес</span>
+                </div>
+                <div class="bg-option ocean" onclick="setPattern('ocean')" title="Океан">
+                    <div class="bg-preview ocean"></div>
+                    <span>Океан</span>
+                </div>
+                <div class="bg-option grid" onclick="setPattern('grid')" title="Сетка">
+                    <div class="bg-preview grid"></div>
+                    <span>Сетка</span>
+                </div>
+                <div class="bg-option dots" onclick="setPattern('dots')" title="Точки">
+                    <div class="bg-preview dots"></div>
+                    <span>Точки</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-section">
+            <h5>Своя картинка</h5>
+            <div class="custom-bg">
+                <input type="file" id="bgImageUpload" accept="image/*" style="display: none;">
+                <button class="upload-bg-btn" onclick="document.getElementById('bgImageUpload').click()">
+                    Выбрать изображение
+                </button>
+                <div class="bg-preview" id="customBgPreview"></div>
+                <div class="opacity-control">
+                    <label>Прозрачность: <span id="opacityValue">30%</span></label>
+                    <input type="range" id="bgOpacity" min="0" max="100" value="30" onchange="setBgOpacity(this.value)">
+                </div>
+                <button class="save-bg-btn" onclick="uploadBgImage()">Сохранить фон</button>
+                <button class="remove-bg-btn" onclick="removeBg()">Удалить фон</button>
+            </div>
+        </div>
+    </div>
+</div>
     
     <script>
         // ============ ПОДКЛЮЧЕНИЕ WEBSOCKET ============
@@ -1257,6 +1535,163 @@
         });
 
         console.log('Чат загружен, пользователь:', username);
+        // ============ ФУНКЦИИ ДЛЯ ФОНА ============
+
+// Загрузка сохраненного фона
+async function loadUserBackground() {
+    try {
+        const response = await fetch(`/api/bg-image/${username}`);
+        const data = await response.json();
+        if (data.image) {
+            setBackgroundImage(data.image);
+        }
+        
+        const patternResponse = await fetch(`/api/bg-pattern/${username}`);
+        const patternData = await patternResponse.json();
+        if (patternData.pattern) {
+            setPatternClass(patternData.pattern);
+        }
+    } catch (error) {
+        console.error('Ошибка загрузки фона:', error);
+    }
+}
+
+// Открыть/закрыть меню фона
+function toggleBgMenu() {
+    document.getElementById('bgMenu').classList.toggle('show');
+}
+
+// Установка темы
+async function setPattern(pattern) {
+    setPatternClass(pattern);
+    
+    // Убираем картинку если была
+    document.getElementById('chatMessages').classList.remove('has-bg-image');
+    
+    try {
+        const response = await fetch('/api/bg-pattern', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ pattern: pattern })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            console.log('✅ Тема сохранена');
+            // Подсветка выбранной темы
+            document.querySelectorAll('.bg-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            event.currentTarget.classList.add('selected');
+        }
+    } catch (error) {
+        console.error('❌ Ошибка сохранения темы:', error);
+    }
+}
+
+function setPatternClass(pattern) {
+    const messagesDiv = document.getElementById('chatMessages');
+    messagesDiv.className = 'messages'; // сбрасываем
+    messagesDiv.classList.add(pattern);
+}
+
+// Установка картинки
+function setBackgroundImage(imageBase64) {
+    const messagesDiv = document.getElementById('chatMessages');
+    messagesDiv.style.setProperty('--user-bg', `url("${imageBase64}")`);
+    messagesDiv.classList.add('has-bg-image');
+}
+
+// Предпросмотр выбранного изображения
+document.getElementById('bgImageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (file.size > 5 * 1024 * 1024) {
+        alert('Файл слишком большой. Максимум 5MB');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('customBgPreview').style.backgroundImage = `url("${e.target.result}")`;
+    };
+    reader.readAsDataURL(file);
+});
+
+// Загрузка картинки на сервер
+async function uploadBgImage() {
+    const preview = document.getElementById('customBgPreview');
+    const bgImage = preview.style.backgroundImage;
+    
+    if (!bgImage || bgImage === 'none') {
+        alert('Сначала выберите изображение');
+        return;
+    }
+    
+    const base64 = bgImage.slice(5, -2);
+    
+    try {
+        const response = await fetch('/api/bg-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ image: base64 })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            setBackgroundImage(base64);
+            // Убираем выделение с тем
+            document.querySelectorAll('.bg-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            toggleBgMenu();
+        }
+    } catch (error) {
+        alert('Ошибка загрузки фона');
+    }
+}
+
+// Регулировка прозрачности
+function setBgOpacity(value) {
+    document.getElementById('opacityValue').textContent = value + '%';
+    document.getElementById('chatMessages').style.setProperty('--bg-opacity', value / 100);
+}
+
+// Удаление фона
+async function removeBg() {
+    if (confirm('Удалить фоновое изображение?')) {
+        try {
+            const response = await fetch('/api/bg-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image: null })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                const messagesDiv = document.getElementById('chatMessages');
+                messagesDiv.classList.remove('has-bg-image');
+                messagesDiv.style.removeProperty('--user-bg');
+                document.getElementById('customBgPreview').style.backgroundImage = '';
+                toggleBgMenu();
+            }
+        } catch (error) {
+            alert('Ошибка удаления фона');
+        }
+    }
+}
+
+// Загружаем фон при старте
+loadUserBackground();
     </script>
 </body>
 </html>
