@@ -2,56 +2,42 @@ from flask import Flask, render_template, request, session, redirect, url_for, j
 from flask_socketio import SocketIO, emit
 import gevent
 from gevent import monkey
+monkey.patch_all()
 import os
 from datetime import datetime
 import json
 import database as db
 
-monkey.patch_all()
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'eptagram_secret_key_2024'
-app.config['SECRET_KEY_TYPE'] = 'bytes'  
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='gevent', ping_timeout=60,ping_interval=25, logger=False, engineio_logger=False)
 
-# Хранилище socket.id
+socketio = SocketIO(app, 
+                   cors_allowed_origins="*", 
+                   async_mode='gevent', 
+                   logger=False, 
+                   engineio_logger=False)
+
 user_sockets = {}
-
-# ============ СТРАНИЦЫ ============
 
 @app.route('/')
 def index():
     if 'username' in session:
         return redirect(url_for('chat'))
-    return render_template('login.html') # ← ИЗМЕНИЛ НА login.html!
-
-@app.route('/chat')
-def chat():
-    if 'username' not in session:
-        return redirect(url_for('index'))
-
-    all_users = db.get_all_users()
-    other_users = [u['username'] for u in all_users if u['username'] != session['username']]
-
-    return render_template('chat.html', # ← ТЕПЕРЬ chat.html
-                         username=session['username'],
-                         users=other_users)
-
-# ============ АВТОРИЗАЦИЯ ============
+    return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
 def login():
     username = request.form['username'].strip()
     if not username:
         return 'Ник не может быть пустым'
-
+    
     if db.get_user_status(username) is not None:
         return 'Этот ник уже занят! <a href="/">Попробовать другой</a>'
-
+    
     db.add_user(username)
     session['username'] = username
     db.set_user_online(username, True)
-
+    
     return redirect(url_for('chat'))
 
 @app.route('/logout')
@@ -64,6 +50,18 @@ def logout():
         socketio.emit('user_offline', {'username': username}, broadcast=True)
     return redirect(url_for('index'))
 
+@app.route('/chat')
+def chat():
+    if 'username' not in session:
+        return redirect(url_for('index'))
+    
+    all_users = db.get_all_users()
+    other_users = [u['username'] for u in all_users if u['username'] != session['username']]
+    
+    return render_template('chat.html',
+                         username=session['username'],
+                         users=other_users)
+
 # ============ API ============
 
 @app.route('/api/messages')
@@ -75,7 +73,7 @@ def get_private_messages(user):
     current_user = session.get('username')
     if not current_user:
         return jsonify([])
-
+    
     db.mark_private_as_read(user, current_user)
     messages = db.get_private_messages(current_user, user, 50)
     return jsonify(messages)
@@ -120,14 +118,14 @@ def handle_private(data):
     from_user = session['username']
     to_user = data['to']
     text = data['text']
-
+    
     msg = db.save_private_message(from_user, to_user, text)
-
+    
     if to_user in user_sockets:
         emit('new_private', msg, room=user_sockets[to_user])
-
+    
     emit('new_private', msg, room=request.sid)
-
+    
     if to_user in user_sockets:
         unread = db.get_unread_count(to_user)
         emit('unread_update', unread, room=user_sockets[to_user])
@@ -135,7 +133,7 @@ def handle_private(data):
 @socketio.on('typing')
 def handle_typing(data):
     username = session['username']
-
+    
     if data['to'] == 'general':
         emit('user_typing', {
             'username': username,
@@ -148,7 +146,6 @@ def handle_typing(data):
                 'is_typing': data['is_typing']
             }, room=user_sockets[data['to']])
 
-# Закомментировано для PythonAnywhere
 if __name__ == '__main__':
- port = int(os.environ.get('PORT', 5000))
- socketio.run(app, host='0.0.0.0', port=port, debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=True)
