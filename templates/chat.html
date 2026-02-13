@@ -404,8 +404,9 @@
         
         <div class="main-chat">
             <div class="chat-header" id="chatHeader">
-                Общий чат
-            </div>
+    <span class="menu-toggle" onclick="toggleSidebar()">☰</span>
+    <span id="chatHeaderText">Общий чат</span>
+</div>
             
             <div class="chat-messages" id="chatMessages"></div>
             
@@ -419,6 +420,7 @@
         </div>
     </div>
     <script>
+
         const socket = io();
         const username = '{{ username }}';
         let currentChannel = 'general';
@@ -486,6 +488,30 @@
                     }
                 }
             });
+// ========== ФУНКЦИИ ДЛЯ МОБИЛЬНОЙ ВЕРСИИ ==========
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// Автоматически закрывать меню при смене канала на мобилках
+function switchChannel(channel) {
+    // ... твой существующий код ...
+    
+    // Добавь ЭТУ СТРОКУ в конец функции:
+    if (window.innerWidth <= 768) {
+        closeSidebar();
+    }
+}
         // ПЕРЕКЛЮЧЕНИЕ КАНАЛОВ
         function switchChannel(channel) {
             document.querySelectorAll('.channel').forEach(el => {
