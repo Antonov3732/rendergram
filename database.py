@@ -275,15 +275,16 @@ def get_general_messages(limit=50, offset=0):
     try:
         conn = get_db()
         cur = conn.cursor()
+        # ВАЖНО: ORDER BY id DESC для получения последних сообщений первыми
         cur.execute(
-            'SELECT id, username, text, time, date FROM general_messages ORDER BY id ASC LIMIT %s OFFSET %s',
+            'SELECT id, username, text, time, date FROM general_messages ORDER BY id DESC LIMIT %s OFFSET %s',
             (limit, offset)
         )
         rows = cur.fetchall()
         conn.close()
         
         messages = []
-        for row in rows:
+        for row in reversed(rows):  # Переворачиваем для правильного порядка
             messages.append({
                 'id': row['id'],
                 'from': row['username'],
@@ -340,14 +341,14 @@ def get_private_messages(user1, user2, limit=50, offset=0):
             '''SELECT id, from_user, to_user, text, time, date 
                FROM private_messages 
                WHERE (from_user = %s AND to_user = %s) OR (from_user = %s AND to_user = %s)
-               ORDER BY id ASC LIMIT %s OFFSET %s''',
+               ORDER BY id DESC LIMIT %s OFFSET %s''',
             (user1, user2, user2, user1, limit, offset)
         )
         rows = cur.fetchall()
         conn.close()
         
         messages = []
-        for row in rows:
+        for row in reversed(rows):
             messages.append({
                 'id': row['id'],
                 'from': row['from_user'],
