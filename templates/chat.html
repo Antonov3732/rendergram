@@ -857,8 +857,56 @@
         let typingTimeout = null;
         let unreadMessages = {};
         const displayedMessageIds = new Set();
-        
+
+                // ============ КОНВЕРТАЦИЯ ВРЕМЕНИ В ЛОКАЛЬНЫЙ ПОЯС С ПОЛНОЙ ДАТОЙ ============
+        function convertToLocalTime(utcTimeStr, utcDateStr) {
+            if (!utcTimeStr) return '';
+            
+            // Разбираем UTC время
+            const [hours, minutes] = utcTimeStr.split(':');
+            let [day, month, year] = ['01', '01', '2024'];
+            
+            if (utcDateStr) {
+                [day, month, year] = utcDateStr.split('.');
+            }
+            
+            // Создаем дату в UTC
+            const utcDate = new Date(Date.UTC(
+                parseInt(year),
+                parseInt(month) - 1,
+                parseInt(day),
+                parseInt(hours),
+                parseInt(minutes)
+            ));
+            
+            // Конвертируем в локальное время пользователя
+            const localDate = new Date(utcDate);
+            
+            // Форматируем
+            const localHours = localDate.getHours().toString().padStart(2, '0');
+            const localMinutes = localDate.getMinutes().toString().padStart(2, '0');
+            const localDay = localDate.getDate().toString().padStart(2, '0');
+            const localMonth = (localDate.getMonth() + 1).toString().padStart(2, '0');
+            const localYear = localDate.getFullYear();
+            
+            // Проверяем, сегодня ли сообщение
+            const now = new Date();
+            const isToday = localDate.toDateString() === now.toDateString();
+            const isThisYear = localYear === now.getFullYear();
+            
+            if (isToday) {
+                // Сегодня: показываем только время
+                return `${localHours}:${localMinutes}`;
+            } else if (isThisYear) {
+                // Этот год: показываем число.месяц время
+                return `${localDay}.${localMonth} ${localHours}:${localMinutes}`;
+            } else {
+                // Другой год: полная дата
+                return `${localDay}.${localMonth}.${localYear} ${localHours}:${localMinutes}`;
+            }
+        }
         // ============ ПЕРЕМЕННЫЕ ДЛЯ ПАГИНАЦИИ ============
+        
         let currentOffset = 0;
         let hasMoreHistory = true;
         let isLoadingHistory = false;
@@ -1223,7 +1271,7 @@
 
         // ============ ФУНКЦИИ СОЗДАНИЯ СООБЩЕНИЙ ============
 
-        function createMessageElement(msg) {
+               function createMessageElement(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
             
@@ -1238,6 +1286,9 @@
                 }
             }
             
+            // Конвертируем время с полной датой
+            const localTime = convertToLocalTime(msg.time, msg.date);
+            
             messageDiv.innerHTML = `
                 ${msg.from !== username ? `
                     <div class="message-sender">
@@ -1247,13 +1298,13 @@
                     </div>
                 ` : ''}
                 <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
+                <div class="message-time">${localTime}</div>
             `;
             
             return messageDiv;
         }
 
-        function createPrivateMessageElement(msg) {
+                function createPrivateMessageElement(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'own' : ''}`;
             
@@ -1268,6 +1319,9 @@
                 }
             }
             
+            // Конвертируем время с полной датой
+            const localTime = convertToLocalTime(msg.time, msg.date);
+            
             messageDiv.innerHTML = `
                 ${msg.from !== username ? `
                     <div class="message-sender">
@@ -1277,7 +1331,7 @@
                     </div>
                 ` : ''}
                 <div class="message-bubble">${escapeHtml(msg.text)}</div>
-                <div class="message-time">${msg.time} ${msg.date !== new Date().toLocaleDateString('ru-RU') ? msg.date : ''}</div>
+                <div class="message-time">${localTime}</div>
             `;
             
             return messageDiv;
