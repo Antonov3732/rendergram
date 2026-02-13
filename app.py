@@ -271,6 +271,25 @@ def get_bg_image(username):
     image = db.get_bg_image(username)
     return jsonify({'image': image})
 
+# ============ API ДЛЯ НЕПРОЗРАЧНОСТИ ============
+@app.route('/api/bg-opacity', methods=['POST'])
+def update_bg_opacity():
+    if 'username' not in session:
+        return jsonify({'error': 'Not logged in'}), 401
+    
+    data = request.json
+    opacity = data.get('opacity', 30)
+    
+    if db.update_bg_opacity(session['username'], opacity):
+        return jsonify({'success': True})
+    
+    return jsonify({'error': 'Failed to update opacity'}), 400
+
+@app.route('/api/bg-opacity/<username>')
+def get_bg_opacity(username):
+    opacity = db.get_bg_opacity(username)
+    return jsonify({'opacity': opacity})
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     socketio.run(app, host='0.0.0.0', port=port, debug=True)
