@@ -1,34 +1,24 @@
 import sqlite3
 from datetime import datetime
-import pytz
-import os
-import sqlite3
-from datetime import datetime
-import pytz
 import os
 
-print("="*50)
-print("💾 DATABASE.PY ЗАГРУЖЕН!")
+# ============ ПУТЬ К БАЗЕ ДАННЫХ ============
+# Для Render используем абсолютный путь
 DB_PATH = os.path.join(os.path.dirname(__file__), 'eptagram.db')
-print(f"📁 Путь к БД: {os.path.abspath(DB_PATH)}")
-print(f"📁 Существует? {os.path.exists(DB_PATH)}")
-print("="*50)
-
-# ... остальной код
-# ✅ ФИКСИРОВАННЫЙ ПУТЬ ДЛЯ RENDER
-DB_PATH = '/opt/render/project/src/eptagram.db'
 
 def init_db():
-    """Создает таблицы при первом запуске"""
+    """Создает все таблицы при первом запуске"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     
+    # Таблица пользователей
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (username TEXT PRIMARY KEY,
-                  online INTEGER DEFAULT 0,
+                  online BOOLEAN DEFAULT 0,
                   last_seen TEXT,
                   registered TEXT)''')
     
+    # Таблица общего чата
     c.execute('''CREATE TABLE IF NOT EXISTS general_messages
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   username TEXT,
@@ -36,6 +26,7 @@ def init_db():
                   time TEXT,
                   date TEXT)''')
     
+    # Таблица личных сообщений
     c.execute('''CREATE TABLE IF NOT EXISTS private_messages
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   from_user TEXT,
@@ -43,145 +34,49 @@ def init_db():
                   text TEXT,
                   time TEXT,
                   date TEXT,
-                  is_read INTEGER DEFAULT 0)''')
+                  is_read BOOLEAN DEFAULT 0)''')
     
     conn.commit()
     conn.close()
     print("✅ База данных инициализирована")
 
-# ============ ОБЩИЙ ЧАТ ============
-
-def save_general_message(username, text):
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        now_time = datetime.now(pytz.UTC).strftime('%H:%M')
-        now_date = datetime.now(pytz.UTC).strftime('%d.%m.%Y')
-        
-        c.execute('''INSERT INTO general_messages (username, text, time, date)
-                     VALUES (?, ?, ?, ?)''', (username, text, now_time, now_date))
-        message_id = c.lastrowid
-        conn.commit()
-        conn.close()
-        
-        print(f"✅ Сообщение сохранено: {username} - {text[:20]}...")
-        
-        return {
-            'id': message_id,
-            'from': username,
-            'text': text,
-            'time': now_time,
-            'date': now_date
-        }
-    except Exception as e:
-        print(f"❌ ОШИБКА СОХРАНЕНИЯ: {e}")
-        return None
-
-def get_general_messages(limit=50):
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('''SELECT id, username, text, time, date 
-                     FROM general_messages 
-                     ORDER BY id DESC LIMIT ?''', (limit,))
-        rows = c.fetchall()
-        conn.close()
-        
-        messages = []
-        for row in reversed(rows):
-            messages.append({
-                'id': row[0],
-                'from': row[1],
-                'text': row[2],
-                'time': row[3],
-                'date': row[4]
-            })
-        print(f"📖 Загружено {len(messages)} сообщений")
-        return messages
-    except Exception as e:
-        print(f"❌ ОШИБКА ЗАГРУЗКИ: {e}")
-        return []
-
-# ============ ЛИЧНЫЕ СООБЩЕНИЯ ============
-
-def save_private_message(from_user, to_user, text):
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        now_time = datetime.now(pytz.UTC).strftime('%H:%M')
-        now_date = datetime.now(pytz.UTC).strftime('%d.%m.%Y')
-        
-        c.execute('''INSERT INTO private_messages (from_user, to_user, text, time, date, is_read)
-                     VALUES (?, ?, ?, ?, ?, 0)''', (from_user, to_user, text, now_time, now_date))
-        message_id = c.lastrowid
-        conn.commit()
-        conn.close()
-        
-        print(f"✅ Личное сохранено: {from_user} -> {to_user}")
-        
-        return {
-            'id': message_id,
-            'from': from_user,
-            'to': to_user,
-            'text': text,
-            'time': now_time,
-            'date': now_date
-        }
-    except Exception as e:
-        print(f"❌ ОШИБКА СОХРАНЕНИЯ ЛИЧНОГО: {e}")
-        return None
-
-def get_private_messages(user1, user2, limit=50):
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        c.execute('''SELECT id, from_user, to_user, text, time, date 
-                     FROM private_messages 
-                     WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?)
-                     ORDER BY id DESC LIMIT ?''', (user1, user2, user2, user1, limit))
-        rows = c.fetchall()
-        conn.close()
-        
-        messages = []
-        for row in reversed(rows):
-            messages.append({
-                'id': row[0],
-                'from': row[1],
-                'to': row[2],
-                'text': row[3],
-                'time': row[4],
-                'date': row[5]
-            })
-        return messages
-    except Exception as e:
-        print(f"❌ ОШИБКА ЗАГРУЗКИ ЛИЧНЫХ: {e}")
-        return []
-
 # ============ ПОЛЬЗОВАТЕЛИ ============
 
 def add_user(username):
+    """Добавляет нового пользователя"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     try:
-        conn = sqlite3.connect(DB_PATH)
-        c = conn.cursor()
-        now = datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
         c.execute('INSERT INTO users (username, registered, last_seen) VALUES (?, ?, ?)',
                  (username, now, now))
         conn.commit()
-        conn.close()
         return True
-    except:
+    except sqlite3.IntegrityError:
         return False
+    finally:
+        conn.close()
 
-def set_user_online(username, online=True):
+def remove_user(username):
+    """Удаляет пользователя (при выходе)"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
-    now = datetime.now(pytz.UTC).strftime('%Y-%m-%d %H:%M:%S')
+    c.execute('DELETE FROM users WHERE username = ?', (username,))
+    conn.commit()
+    conn.close()
+
+def set_user_online(username, online=True):
+    """Обновляет статус пользователя"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     c.execute('UPDATE users SET online = ?, last_seen = ? WHERE username = ?',
              (1 if online else 0, now, username))
     conn.commit()
     conn.close()
 
 def get_all_users():
+    """Возвращает список всех пользователей"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('SELECT username, online FROM users ORDER BY username')
@@ -190,6 +85,7 @@ def get_all_users():
     return users
 
 def get_user_status(username):
+    """Проверяет, существует ли пользователь"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('SELECT online FROM users WHERE username = ?', (username,))
@@ -197,7 +93,103 @@ def get_user_status(username):
     conn.close()
     return result[0] if result else None
 
+# ============ ОБЩИЙ ЧАТ ============
+
+def save_general_message(username, text):
+    """Сохраняет сообщение в общий чат"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    now_time = datetime.now().strftime('%H:%M')
+    now_date = datetime.now().strftime('%d.%m.%Y')
+    c.execute('''INSERT INTO general_messages (username, text, time, date)
+                 VALUES (?, ?, ?, ?)''', (username, text, now_time, now_date))
+    message_id = c.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return {
+        'id': message_id,
+        'from': username,
+        'text': text,
+        'time': now_time,
+        'date': now_date
+    }
+
+def get_general_messages(limit=50):
+    """Получает последние сообщения из общего чата"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''SELECT id, username, text, time, date 
+                 FROM general_messages 
+                 ORDER BY id DESC LIMIT ?''', (limit,))
+    messages = []
+    for row in reversed(list(c.fetchall())):
+        messages.append({
+            'id': row[0],
+            'from': row[1],
+            'text': row[2],
+            'time': row[3],
+            'date': row[4]
+        })
+    conn.close()
+    return messages
+
+# ============ ЛИЧНЫЕ СООБЩЕНИЯ ============
+
+def save_private_message(from_user, to_user, text):
+    """Сохраняет личное сообщение"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    now_time = datetime.now().strftime('%H:%M')
+    now_date = datetime.now().strftime('%d.%m.%Y')
+    c.execute('''INSERT INTO private_messages (from_user, to_user, text, time, date, is_read)
+                 VALUES (?, ?, ?, ?, ?, 0)''', (from_user, to_user, text, now_time, now_date))
+    message_id = c.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return {
+        'id': message_id,
+        'from': from_user,
+        'to': to_user,
+        'text': text,
+        'time': now_time,
+        'date': now_date
+    }
+
+def get_private_messages(user1, user2, limit=50):
+    """Получает переписку между двумя пользователями"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''SELECT id, from_user, to_user, text, time, date 
+                 FROM private_messages 
+                 WHERE (from_user = ? AND to_user = ?) OR (from_user = ? AND to_user = ?)
+                 ORDER BY id DESC LIMIT ?''', (user1, user2, user2, user1, limit))
+    messages = []
+    for row in reversed(list(c.fetchall())):
+        messages.append({
+            'id': row[0],
+            'from': row[1],
+            'to': row[2],
+            'text': row[3],
+            'time': row[4],
+            'date': row[5]
+        })
+    conn.close()
+    return messages
+
+def mark_private_as_read(from_user, to_user):
+    """Отмечает сообщения как прочитанные"""
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+    c.execute('''UPDATE private_messages 
+                 SET is_read = 1 
+                 WHERE from_user = ? AND to_user = ?''', (from_user, to_user))
+    conn.commit()
+    conn.close()
+
 def get_unread_count(username):
+    """Сколько непрочитанных сообщений у пользователя"""
     conn = sqlite3.connect(DB_PATH)
     c = conn.cursor()
     c.execute('''SELECT from_user, COUNT(*) 
@@ -208,14 +200,11 @@ def get_unread_count(username):
     conn.close()
     return result
 
-def mark_private_as_read(from_user, to_user):
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-    c.execute('''UPDATE private_messages 
-                 SET is_read = 1 
-                 WHERE from_user = ? AND to_user = ?''', (from_user, to_user))
-    conn.commit()
-    conn.close()
-
-# Инициализация
-init_db()
+# ============ ИНИЦИАЛИЗАЦИЯ ============
+# Создаем таблицы при импорте
+if __name__ != '__main__':
+    init_db()
+else:
+    # Если файл запущен напрямую
+    init_db()
+    print("✅ Database ready!")
