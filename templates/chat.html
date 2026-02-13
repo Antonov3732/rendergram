@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EptaGram</title>
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
@@ -14,7 +14,7 @@
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0a0a0a;
             height: 100vh;
             display: flex;
             justify-content: center;
@@ -24,36 +24,37 @@
         .chat-container {
             width: 1200px;
             height: 800px;
-            background: white;
+            background: #1a1a1a;
             border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
             overflow: hidden;
             display: flex;
+            border: 1px solid #333;
         }
         
         .sidebar {
             width: 300px;
-            background: #f8f9fa;
-            border-right: 1px solid #e0e0e0;
+            background: #0d0d0d;
+            border-right: 1px solid #333;
             display: flex;
             flex-direction: column;
         }
         
         .user-profile {
             padding: 20px;
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
+            background: #111;
+            border-bottom: 1px solid #333;
         }
         
         .user-name {
             font-size: 20px;
             font-weight: bold;
-            color: #764ba2;
+            color: #9f7aea;
             margin-bottom: 5px;
         }
         
         .logout-btn {
-            color: #dc3545;
+            color: #fc8181;
             text-decoration: none;
             font-size: 14px;
         }
@@ -72,10 +73,11 @@
             transition: 0.3s;
             display: flex;
             align-items: center;
+            color: #e0e0e0;
         }
         
         .channel:hover {
-            background: #e9ecef;
+            background: #2d2d2d;
         }
         
         .channel.active {
@@ -95,23 +97,23 @@
             margin-right: 10px;
         }
         
-        .online { background: #28a745; }
-        .offline { background: #dc3545; }
+        .online { background: #48bb78; }
+        .offline { background: #fc8181; }
         
         .main-chat {
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: white;
+            background: #1a1a1a;
         }
         
         .chat-header {
             padding: 20px;
-            background: white;
-            border-bottom: 1px solid #e0e0e0;
+            background: #111;
+            border-bottom: 1px solid #333;
             font-size: 18px;
             font-weight: bold;
-            color: #764ba2;
+            color: #9f7aea;
             display: flex;
             align-items: center;
         }
@@ -120,7 +122,7 @@
             flex: 1;
             overflow-y: auto;
             padding: 20px;
-            background: #f8f9fa;
+            background: #1a1a1a;
         }
         
         .message {
@@ -137,9 +139,10 @@
             max-width: 70%;
             padding: 12px 18px;
             border-radius: 18px;
-            background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            background: #2d2d2d;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             position: relative;
+            color: #e0e0e0;
         }
         
         .message-own .message-content {
@@ -149,13 +152,13 @@
         
         .message-sender {
             font-weight: bold;
-            color: #764ba2;
+            color: #9f7aea;
             margin-bottom: 5px;
         }
         
         .message-time {
             font-size: 11px;
-            color: #6c757d;
+            color: #a0aec0;
             margin-top: 5px;
             text-align: right;
         }
@@ -166,15 +169,16 @@
         
         .typing-indicator {
             padding: 10px 20px;
-            color: #6c757d;
+            color: #a0aec0;
             font-style: italic;
             font-size: 14px;
+            background: #111;
         }
         
         .message-input-area {
             padding: 20px;
-            background: white;
-            border-top: 1px solid #e0e0e0;
+            background: #111;
+            border-top: 1px solid #333;
             display: flex;
             gap: 10px;
         }
@@ -182,15 +186,21 @@
         .message-input {
             flex: 1;
             padding: 12px;
-            border: 2px solid #e0e0e0;
+            border: 2px solid #333;
             border-radius: 25px;
             font-size: 15px;
             transition: 0.3s;
+            background: #2d2d2d;
+            color: #e0e0e0;
         }
         
         .message-input:focus {
-            border-color: #764ba2;
+            border-color: #9f7aea;
             outline: none;
+        }
+        
+        .message-input::placeholder {
+            color: #718096;
         }
         
         .send-btn {
@@ -210,7 +220,7 @@
         }
         
         .notification-badge {
-            background: #dc3545;
+            background: #fc8181;
             color: white;
             border-radius: 50%;
             padding: 2px 6px;
@@ -218,173 +228,21 @@
             margin-left: 10px;
         }
         
-        .private-badge {
-            background: #ffc107;
-            color: #000;
-            border-radius: 10px;
-            padding: 2px 8px;
-            font-size: 11px;
-            margin-left: 10px;
+        ::-webkit-scrollbar {
+            width: 8px;
         }
-        /* ============ АДАПТИВНОСТЬ ============ */
-        @media screen and (max-width: 1200px) {
-            .chat-container {
-                width: 95%;
-                height: 95vh;
-                margin: 2.5vh auto;
-            }
+        
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
         }
-
-        @media screen and (max-width: 900px) {
-            .chat-container {
-                flex-direction: column;
-                width: 100%;
-                height: 100vh;
-                border-radius: 0;
-                margin: 0;
-            }
-            .sidebar {
-                width: 100%;
-                height: 40%;
-                border-right: none;
-                border-bottom: 1px solid #e0e0e0;
-            }
-            .main-chat {
-                width: 100%;
-                height: 60%;
-            }
-            .message-content {
-                max-width: 85%;
-            }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
         }
-
-        @media screen and (max-width: 600px) {
-            body { background: white; }
-            .chat-container {
-                width: 100%;
-                height: 100vh;
-                border-radius: 0;
-                box-shadow: none;
-            }
-            .sidebar {
-                height: 45%;
-                padding: 10px;
-            }
-            .user-profile { padding: 15px; }
-            .user-name { font-size: 18px; }
-            .channels { padding: 15px; }
-            .channel {
-                padding: 12px;
-                font-size: 14px;
-            }
-            .main-chat { height: 55%; }
-            .chat-header {
-                padding: 15px;
-                font-size: 16px;
-            }
-            .chat-messages { padding: 15px; }
-            .message-content {
-                max-width: 90%;
-                padding: 10px 15px;
-                font-size: 14px;
-            }
-            .message-time { font-size: 10px; }
-            .message-input-area { padding: 15px; }
-            .message-input {
-                padding: 10px;
-                font-size: 14px;
-            }
-            .send-btn {
-                padding: 10px 20px;
-                font-size: 14px;
-            }
-            .typing-indicator {
-                padding: 8px 15px;
-                font-size: 12px;
-            }
-        }
-
-        @media screen and (max-width: 380px) {
-            .sidebar { height: 50%; }
-            .main-chat { height: 50%; }
-            .user-name { font-size: 16px; }
-            .logout-btn { font-size: 12px; }
-            .channel {
-                padding: 10px;
-                font-size: 13px;
-            }
-            .online-status {
-                width: 8px;
-                height: 8px;
-            }
-            .chat-header {
-                padding: 12px;
-                font-size: 15px;
-            }
-            .message-input-area {
-                padding: 12px;
-                gap: 8px;
-            }
-            .message-input {
-                padding: 8px 12px;
-            }
-            .send-btn {
-                padding: 8px 16px;
-            }
-            .notification-badge {
-                padding: 1px 5px;
-                font-size: 10px;
-            }
-        }
-
-        @media screen and (max-width: 900px) and (orientation: landscape) {
-            .chat-container {
-                flex-direction: row;
-            }
-            .sidebar {
-                width: 35%;
-                height: 100%;
-                border-bottom: none;
-                border-right: 1px solid #e0e0e0;
-            }
-            .main-chat {
-                width: 65%;
-                height: 100%;
-            }
-            .channels {
-                overflow-y: auto;
-                max-height: calc(100vh - 100px);
-            }
-        }
-
-        @media (hover: none) and (pointer: coarse) {
-            .channel:hover { background: inherit; }
-            .channel:active { background: #e9ecef; }
-            .send-btn:hover {
-                transform: none;
-                box-shadow: none;
-            }
-            .send-btn:active {
-                transform: scale(0.98);
-                box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-            }
-        }
-
-        @media screen and (min-width: 2000px) {
-            .chat-container {
-                width: 1600px;
-                height: 900px;
-            }
-            .sidebar { width: 400px; }
-            .message-content {
-                max-width: 60%;
-                font-size: 16px;
-            }
-            .chat-header {
-                font-size: 20px;
-                padding: 25px;
-            }
-            .message-input { font-size: 16px; }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #718096;
         }
     </style>
 </head>
@@ -398,11 +256,11 @@
             
             <div class="channels" id="channels">
                 <div class="channel active" onclick="switchChannel('general')">
-                    <span class="channel-icon">💬</span>
+                    <span class="channel-icon">#</span>
                     Общий чат
                 </div>
                 
-                <div style="margin-top: 20px; margin-bottom: 10px; color: #6c757d; font-size: 12px; padding-left: 15px;">
+                <div style="margin-top: 20px; margin-bottom: 10px; color: #a0aec0; font-size: 12px; padding-left: 15px;">
                     ЛИЧНЫЕ СООБЩЕНИЯ
                 </div>
                 
@@ -434,7 +292,6 @@
             </div>
         </div>
     </div>
-
     <script>
         const socket = io();
         const username = '{{ username }}';
@@ -442,19 +299,53 @@
         let currentUser = null;
         let typingTimeout = null;
         let unreadMessages = {};
+        const displayedMessageIds = new Set();
 
-        console.log('Connecting to WebSocket...');
-        socket.on('connect', function() {
-            console.log('✅ WebSocket connected!');
-        });
-        socket.on('connect_error', function(error) {
-            console.error('❌ WebSocket error:', error);
-        });
+        // КОНВЕРТАЦИЯ UTC В ЛОКАЛЬНОЕ ВРЕМЯ
+        function convertToLocalTime(utcTimeStr, utcDateStr) {
+            if (!utcTimeStr) return '';
+            
+            const [hours, minutes] = utcTimeStr.split(':');
+            let [day, month, year] = ['13', '02', '2026'];
+            
+            if (utcDateStr) {
+                [day, month, year] = utcDateStr.split('.');
+            }
+            
+            const utcDate = new Date(Date.UTC(
+                parseInt(year), 
+                parseInt(month) - 1, 
+                parseInt(day), 
+                parseInt(hours), 
+                parseInt(minutes)
+            ));
+            
+            const localDate = new Date(utcDate);
+            const now = new Date();
+            
+            const localHours = localDate.getHours().toString().padStart(2, '0');
+            const localMinutes = localDate.getMinutes().toString().padStart(2, '0');
+            
+            const isToday = localDate.toDateString() === now.toDateString();
+            
+            if (isToday) {
+                return `${localHours}:${localMinutes}`;
+            } else {
+                const localDay = localDate.getDate().toString().padStart(2, '0');
+                const localMonth = (localDate.getMonth() + 1).toString().padStart(2, '0');
+                return `${localDay}.${localMonth} ${localHours}:${localMinutes}`;
+            }
+        }
 
+        // ЗАГРУЗКА ИСТОРИИ
         fetch('/api/messages')
             .then(res => res.json())
             .then(messages => {
-                messages.forEach(msg => displayMessage(msg));
+                messages.forEach(msg => {
+                    const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+                    displayedMessageIds.add(msgId);
+                    displayMessage(msg);
+                });
             });
         
         fetch('/api/unread')
@@ -469,7 +360,7 @@
                     }
                 }
             });
-
+        // ПЕРЕКЛЮЧЕНИЕ КАНАЛОВ
         function switchChannel(channel) {
             document.querySelectorAll('.channel').forEach(el => {
                 el.classList.remove('active');
@@ -481,10 +372,16 @@
                 currentUser = null;
                 
                 document.getElementById('chatMessages').innerHTML = '';
+                displayedMessageIds.clear();
+                
                 fetch('/api/messages')
                     .then(res => res.json())
                     .then(messages => {
-                        messages.forEach(msg => displayMessage(msg));
+                        messages.forEach(msg => {
+                            const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+                            displayedMessageIds.add(msgId);
+                            displayMessage(msg);
+                        });
                     });
             } else {
                 document.getElementById('chatHeader').innerHTML = `Личный чат с ${channel}`;
@@ -496,14 +393,21 @@
                 if (badge) badge.style.display = 'none';
                 
                 document.getElementById('chatMessages').innerHTML = '';
+                displayedMessageIds.clear();
+                
                 fetch(`/api/private/${channel}`)
                     .then(res => res.json())
                     .then(messages => {
-                        messages.forEach(msg => displayPrivateMessage(msg));
+                        messages.forEach(msg => {
+                            const msgId = `${msg.id}-${msg.from}-${msg.time}-private`;
+                            displayedMessageIds.add(msgId);
+                            displayPrivateMessage(msg);
+                        });
                     });
             }
         }
         
+        // ОТПРАВКА СООБЩЕНИЯ
         function sendMessage() {
             const input = document.getElementById('messageInput');
             const text = input.value.trim();
@@ -512,38 +416,34 @@
             
             if (currentChannel === 'general') {
                 socket.emit('send_message', { text: text });
-                displayMessage({
-                    from: username,
-                    text: text,
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-                    date: new Date().toLocaleDateString()
-                });
             } else {
                 socket.emit('send_private', {
                     to: currentUser,
                     text: text
-                });
-                displayPrivateMessage({
-                    from: username,
-                    to: currentUser,
-                    text: text,
-                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
                 });
             }
             
             input.value = '';
         }
         
+        // ОТОБРАЖЕНИЕ ОБЩЕГО СООБЩЕНИЯ
         function displayMessage(msg) {
             const messagesDiv = document.getElementById('chatMessages');
+            
+            const msgId = `${msg.id}-${msg.from}-${msg.time}`;
+            if (displayedMessageIds.has(msgId)) return;
+            displayedMessageIds.add(msgId);
+            
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
+            
+            const timeDisplay = convertToLocalTime(msg.time, msg.date);
             
             messageDiv.innerHTML = `
                 <div class="message-content">
                     ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
                     <div>${escapeHtml(msg.text)}</div>
-                    <div class="message-time">${msg.time}</div>
+                    <div class="message-time">${timeDisplay}</div>
                 </div>
             `;
             
@@ -551,17 +451,25 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
         
+        // ОТОБРАЖЕНИЕ ЛИЧНОГО СООБЩЕНИЯ
         function displayPrivateMessage(msg) {
             if (currentUser === msg.from || currentUser === msg.to) {
                 const messagesDiv = document.getElementById('chatMessages');
+                
+                const msgId = `${msg.id}-${msg.from}-${msg.time}-private`;
+                if (displayedMessageIds.has(msgId)) return;
+                displayedMessageIds.add(msgId);
+                
                 const messageDiv = document.createElement('div');
                 messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
+                
+                const timeDisplay = convertToLocalTime(msg.time, msg.date);
                 
                 messageDiv.innerHTML = `
                     <div class="message-content">
                         ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
                         <div>${escapeHtml(msg.text)}</div>
-                        <div class="message-time">${msg.time}</div>
+                        <div class="message-time">${timeDisplay}</div>
                     </div>
                 `;
                 
@@ -569,6 +477,37 @@
                 messagesDiv.scrollTop = messagesDiv.scrollHeight;
             }
         }
+        
+        // ФУНКЦИЯ ЭКРАНИРОВАНИЯ HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // СОКЕТ-СОБЫТИЯ
+        socket.on('new_message', function(msg) {
+            if (currentChannel === 'general') {
+                displayMessage(msg);
+            }
+        });
+        
+        socket.on('new_private', function(msg) {
+            displayPrivateMessage(msg);
+            
+            if (currentUser !== msg.from && msg.from !== username) {
+                fetch('/api/unread')
+                    .then(res => res.json())
+                    .then(unread => {
+                        unreadMessages = unread;
+                        const badge = document.getElementById(`notify-${msg.from}`);
+                        if (badge && unread[msg.from]) {
+                            badge.style.display = 'inline';
+                            badge.textContent = unread[msg.from];
+                        }
+                    });
+            }
+        });
         
         socket.on('users_update', function(users) {
             const usersList = document.getElementById('usersList');
@@ -592,29 +531,6 @@
                     usersList.appendChild(div);
                 }
             });
-        });
-        
-        socket.on('new_message', function(msg) {
-            if (currentChannel === 'general') {
-                displayMessage(msg);
-            }
-        });
-        
-        socket.on('new_private', function(msg) {
-            displayPrivateMessage(msg);
-            
-            if (currentUser !== msg.from && msg.from !== username) {
-                fetch('/api/unread')
-                    .then(res => res.json())
-                    .then(unread => {
-                        unreadMessages = unread;
-                        const badge = document.getElementById(`notify-${msg.from}`);
-                        if (badge && unread[msg.from]) {
-                            badge.style.display = 'inline';
-                            badge.textContent = unread[msg.from];
-                        }
-                    });
-            }
         });
         
         socket.on('unread_update', function(unread) {
@@ -664,12 +580,7 @@
             }
         });
         
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
+        // ИНДИКАТОР ПЕЧАТАНИЯ
         document.getElementById('messageInput').addEventListener('input', function() {
             clearTimeout(typingTimeout);
             
@@ -688,6 +599,7 @@
             }, 1000);
         });
         
+        // ОТПРАВКА ПО ENTER
         document.getElementById('messageInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
