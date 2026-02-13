@@ -546,108 +546,66 @@
     input.value = '';
 }
         
-        function displayMessage(msg) {
-            const messagesDiv = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message';
-            
-            const avatarLetter = msg.from.charAt(0).toUpperCase();
-            const isOwn = msg.from === username;
-            
-            messageDiv.innerHTML = `
-                <div class="message-avatar" style="background: ${getAvatarColor(msg.from)}">${avatarLetter}</div>
-                <div class="message-content">
-                    <div class="message-header">
-                        <span class="message-author">${escapeHtml(msg.from)}</span>
-                        <span class="message-time">${msg.time}</span>
-                    </div>
-                    <div class="message-text">${escapeHtml(msg.text)}</div>
-                </div>
-            `;
-            
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
+        // ✅ ФУНКЦИЯ КОНВЕРТАЦИИ UTC В ЛОКАЛЬНОЕ ВРЕМЯ - ДОБАВЬ ЭТО!
+function convertUTCtoLocal(utcTimeString) {
+    // Если время уже в формате ЧЧ:ММ (старые сообщения)
+    if (utcTimeString.length === 5 && utcTimeString.includes(':')) {
+        return utcTimeString;
+    }
+    
+    // Конвертируем UTC в локальное время
+    const utcDate = new Date(utcTimeString + ' UTC');
+    const localDate = new Date(utcDate.getTime());
+    
+    // Форматируем как ЧЧ:ММ
+    const hours = localDate.getHours().toString().padStart(2, '0');
+    const minutes = localDate.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+// ✅ ИСПРАВЛЕННАЯ displayMessage
+function displayMessage(msg) {
+    const messagesDiv = document.getElementById('chatMessages');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
+    
+    // КОНВЕРТИРУЕМ UTC В ЛОКАЛЬНОЕ ВРЕМЯ
+    const localTime = convertUTCtoLocal(msg.time);
+    
+    messageDiv.innerHTML = `
+        <div class="message-content">
+            ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
+            <div>${escapeHtml(msg.text)}</div>
+            <div class="message-time">${localTime}</div>
+        </div>
+    `;
+    
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+// ✅ ИСПРАВЛЕННАЯ displayPrivateMessage
+function displayPrivateMessage(msg) {
+    if (currentUser === msg.from || currentUser === msg.to) {
+        const messagesDiv = document.getElementById('chatMessages');
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${msg.from === username ? 'message-own' : ''}`;
         
-        function displayPrivateMessage(msg) {
-            if (currentUser === msg.from || currentUser === msg.to) {
-                const messagesDiv = document.getElementById('chatMessages');
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                
-                const avatarLetter = msg.from.charAt(0).toUpperCase();
-                
-                messageDiv.innerHTML = `
-                    <div class="message-avatar" style="background: ${getAvatarColor(msg.from)}">${avatarLetter}</div>
-                    <div class="message-content">
-                        <div class="message-header">
-                            <span class="message-author">${escapeHtml(msg.from)}</span>
-                            <span class="message-time">${msg.time}</span>
-                        </div>
-                        <div class="message-text">${escapeHtml(msg.text)}</div>
-                    </div>
-                `;
-                
-                messagesDiv.appendChild(messageDiv);
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }
-        }
+        // КОНВЕРТИРУЕМ UTC В ЛОКАЛЬНОЕ ВРЕМЯ
+        const localTime = convertUTCtoLocal(msg.time);
         
-        function getAvatarColor(username) {
-            const colors = ['#5865f2', '#ed4245', '#57f287', '#fee75c', '#eb459e', '#00b0f0', '#cba6f7'];
-            let hash = 0;
-            for (let i = 0; i < username.length; i++) {
-                hash = username.charCodeAt(i) + ((hash << 5) - hash);
-            }
-            return colors[Math.abs(hash) % colors.length];
-        }
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                ${msg.from !== username ? `<div class="message-sender">${escapeHtml(msg.from)}</div>` : ''}
+                <div>${escapeHtml(msg.text)}</div>
+                <div class="message-time">${localTime}</div>
+            </div>
+        `;
         
-        socket.on('users_update', function(users) {
-            const usersList = document.getElementById('usersList');
-            usersList.innerHTML = '';
-            
-            users.forEach(user => {
-                if (user.username !== username) {
-                    const div = document.createElement('div');
-                    div.className = 'channel';
-                    div.id = `user-${user.username}`;
-                    div.onclick = () => switchChannel(user.username);
-                    div.innerHTML = `
-                        <span class="online-status ${user.online ? 'online' : 'offline'}" 
-                              id="status-${user.username}"></span>
-                        ${user.username}
-                        <span class="notification-badge" id="notify-${user.username}" 
-                              style="display: ${unreadMessages[user.username] ? 'inline' : 'none'};">
-                            ${unreadMessages[user.username] || ''}
-                        </span>
-                    `;
-                    usersList.appendChild(div);
-                }
-            });
-        });
-        
-        socket.on('new_message', function(msg) {
-            if (currentChannel === 'general') {
-                displayMessage(msg);
-            }
-        });
-        
-        socket.on('new_private', function(msg) {
-            displayPrivateMessage(msg);
-            
-            if (currentUser !== msg.from && msg.from !== username) {
-                fetch('/api/unread')
-                    .then(res => res.json())
-                    .then(unread => {
-                        unreadMessages = unread;
-                        const badge = document.getElementById(`notify-${msg.from}`);
-                        if (badge && unread[msg.from]) {
-                            badge.style.display = 'inline';
-                            badge.textContent = unread[msg.from];
-                        }
-                    });
-            }
-        });
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+}
 
 socket.on('unread_update', function(unread) {
             unreadMessages = unread;
