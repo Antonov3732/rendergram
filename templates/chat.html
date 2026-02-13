@@ -6,361 +6,388 @@
     <title>EptaGram — Discord style</title>
     <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;  /* Убираем скролл у body */
+    }
+    
+    .chat-container {
+        width: 100vw;
+        height: 100vh;
+        background: white;
+        display: flex;
+        overflow: hidden;
+    }
+    
+    /* Сайдбар */
+    .sidebar {
+        width: 300px;
+        background: #f8f9fa;
+        border-right: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+        height: 100vh;
+    }
+    
+    .user-profile {
+        padding: 20px;
+        background: white;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    
+    .user-name {
+        font-size: 20px;
+        font-weight: bold;
+        color: #764ba2;
+        margin-bottom: 5px;
+    }
+    
+    .logout-btn {
+        color: #dc3545;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    
+    .logout-btn:hover {
+        text-decoration: underline;
+    }
+    
+    .channels {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+    }
+    
+    .channel {
+        padding: 12px 15px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 5px;
+        transition: 0.2s;
+        display: flex;
+        align-items: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .channel:hover {
+        background: #e9ecef;
+    }
+    
+    .channel.active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .channel-icon {
+        margin-right: 10px;
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+    
+    .online-status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    
+    .online { background: #28a745; }
+    .offline { background: #dc3545; }
+    
+    /* Основной чат */
+    .main-chat {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        height: 100vh;
+        min-width: 0;  /* Важно для flexbox */
+    }
+    
+    .chat-header {
+        padding: 20px;
+        background: white;
+        border-bottom: 1px solid #e0e0e0;
+        font-size: 18px;
+        font-weight: bold;
+        color: #764ba2;
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+    }
+    
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px;
+        background: #f8f9fa;
+    }
+    
+    .message {
+        margin-bottom: 20px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .message-own {
+        align-items: flex-end;
+    }
+    
+    .message-content {
+        max-width: 70%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        background: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        position: relative;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    
+    .message-own .message-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+    
+    .message-sender {
+        font-weight: bold;
+        color: #764ba2;
+        margin-bottom: 5px;
+        font-size: 14px;
+    }
+    
+    .message-own .message-sender {
+        color: rgba(255,255,255,0.9);
+    }
+    
+    .message-time {
+        font-size: 11px;
+        color: #6c757d;
+        margin-top: 5px;
+        text-align: right;
+    }
+    
+    .message-own .message-time {
+        color: rgba(255,255,255,0.8);
+    }
+    
+    .typing-indicator {
+        padding: 10px 20px;
+        color: #6c757d;
+        font-style: italic;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    
+    .message-input-area {
+        padding: 20px;
+        background: white;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 10px;
+        flex-shrink: 0;
+    }
+    
+    .message-input {
+        flex: 1;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 25px;
+        font-size: 15px;
+        transition: 0.3s;
+        outline: none;
+    }
+    
+    .message-input:focus {
+        border-color: #764ba2;
+    }
+    
+    .send-btn {
+        padding: 12px 25px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        flex-shrink: 0;
+    }
+    
+    .send-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .notification-badge {
+        background: #dc3545;
+        color: white;
+        border-radius: 50%;
+        padding: 2px 6px;
+        font-size: 12px;
+        margin-left: 10px;
+        flex-shrink: 0;
+    }
+    
+    .private-badge {
+        background: #ffc107;
+        color: #000;
+        border-radius: 10px;
+        padding: 2px 8px;
+        font-size: 11px;
+        margin-left: 10px;
+        flex-shrink: 0;
+    }
+    
+    /* ============ АДАПТАЦИЯ ДЛЯ ВСЕХ ЭКРАНОВ ============ */
+    
+    /* Планшеты */
+    @media (max-width: 992px) {
+        .sidebar {
+            width: 250px;
         }
-        
+    }
+    
+    /* Мобильные */
+    @media (max-width: 768px) {
         body {
-            background: #0f0f0f;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            overflow: auto;  /* Возвращаем скролл для мобильных */
         }
         
         .chat-container {
-            width: 1400px;
-            height: 900px;
-            background: #1a1a1a;
-            display: flex;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        }
-        
-        /* СЕРВЕРНАЯ ПАНЕЛЬ (слева) */
-        .server-panel {
-            width: 72px;
-            background: #121212;
-            display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 12px 0;
-            border-right: 1px solid #202020;
+            height: auto;
+            min-height: 100vh;
         }
         
-        .server-icon {
-            width: 48px;
-            height: 48px;
-            background: #2b2b2b;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #dcddde;
-            font-weight: bold;
-            font-size: 20px;
-            margin-bottom: 8px;
-            transition: 0.2s;
-            cursor: pointer;
+        .sidebar {
+            width: 100%;
+            height: auto;
+            max-height: 40vh;
+            border-right: none;
+            border-bottom: 1px solid #e0e0e0;
         }
         
-        .server-icon:hover {
-            border-radius: 16px;
-            background: #5865f2;
-            color: white;
-        }
-        
-        .server-icon.active {
-            border-radius: 16px;
-            background: #5865f2;
-            color: white;
-        }
-        
-        .server-divider {
-            width: 32px;
-            height: 2px;
-            background: #2b2b2b;
-            margin: 8px 0;
-        }
-        
-        /* КАНАЛЬНАЯ ПАНЕЛЬ (вторая слева) */
-        .channels-panel {
-            width: 240px;
-            background: #1f1f1f;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid #202020;
-        }
-        
-        .user-header {
-            padding: 16px;
-            background: #1a1a1a;
-            border-bottom: 1px solid #202020;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            background: #5865f2;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-        }
-        
-        .user-name {
-            color: white;
-            font-weight: 500;
-            font-size: 14px;
-        }
-        
-        .logout-btn {
-            color: #80848e;
-            text-decoration: none;
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: #2b2b2b;
-            transition: 0.2s;
-        }
-        
-        .logout-btn:hover {
-            background: #3b3b3b;
-            color: white;
-        }
-        
-        .channels-header {
-            padding: 16px 16px 8px;
-            color: #80848e;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .channel {
-            padding: 8px 16px;
-            margin: 0 8px;
-            border-radius: 4px;
-            color: #949ba4;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-        
-        .channel:hover {
-            background: #323232;
-            color: #dcddde;
-        }
-        
-        .channel.active {
-            background: #3b3b3b;
-            color: white;
-        }
-        
-        .channel-icon {
-            font-size: 16px;
-        }
-        
-        .dm-section {
-            padding: 16px 16px 8px;
-            color: #80848e;
-            font-size: 12px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        /* ОСНОВНОЙ ЧАТ */
         .main-chat {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #1e1e1e;
-        }
-        
-        .chat-header {
-            padding: 16px 20px;
-            background: #1e1e1e;
-            border-bottom: 1px solid #202020;
-            display: flex;
-            align-items: center;
-        }
-        
-        .chat-title {
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-        
-        .message {
-            display: flex;
-            padding: 6px 0;
-            gap: 16px;
-            transition: 0.2s;
-        }
-        
-        .message:hover {
-            background: #262626;
-        }
-        
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            background: #5865f2;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            flex-shrink: 0;
+            height: 60vh;
+            min-height: 500px;
         }
         
         .message-content {
-            flex: 1;
+            max-width: 85%;
         }
         
-        .message-header {
-            display: flex;
-            align-items: baseline;
-            gap: 8px;
-            margin-bottom: 4px;
+        .channel {
+            white-space: normal;  /* Перенос текста на мобильных */
+            word-break: break-word;
+        }
+    }
+    
+    /* Очень маленькие экраны */
+    @media (max-width: 480px) {
+        .user-name {
+            font-size: 18px;
         }
         
-        .message-author {
-            color: white;
-            font-weight: 500;
+        .chat-header {
+            padding: 15px;
             font-size: 16px;
         }
         
-        .message-time {
-            color: #80848e;
-            font-size: 12px;
-        }
-        
-        .message-text {
-            color: #dcddde;
-            font-size: 15px;
-            line-height: 1.4;
-        }
-        
-        .message-own .message-author {
-            color: #5865f2;
-        }
-        
-        .typing-indicator {
-            padding: 10px 20px;
-            color: #80848e;
-            font-size: 14px;
-            font-style: italic;
-        }
-        
-        .message-input-area {
-            padding: 20px;
-            background: #1e1e1e;
-            border-top: 1px solid #202020;
-        }
-        
-        .message-input-wrapper {
-            background: #2b2b2b;
-            border-radius: 8px;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        .message-content {
+            max-width: 90%;
+            padding: 10px 15px;
         }
         
         .message-input {
-            flex: 1;
-            background: none;
-            border: none;
-            color: #dcddde;
-            font-size: 15px;
-            outline: none;
-        }
-        
-        .message-input::placeholder {
-            color: #80848e;
+            padding: 10px;
+            font-size: 14px;
         }
         
         .send-btn {
-            background: #5865f2;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: 0.2s;
+            padding: 10px 20px;
         }
         
-        .send-btn:hover {
-            background: #4752c4;
+        .sidebar {
+            max-height: 35vh;
         }
         
-        .online-status {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 8px;
+        .main-chat {
+            min-height: 65vh;
+        }
+    }
+    
+    /* Маленькие телефоны в ландшафтной ориентации */
+    @media (max-height: 600px) and (orientation: landscape) {
+        .sidebar {
+            max-height: 50vh;
         }
         
-        .online { background: #23a55a; }
-        .offline { background: #80848e; }
-        
-        .notification-badge {
-            background: #f23f42;
-            color: white;
-            border-radius: 50%;
-            padding: 2px 6px;
-            font-size: 12px;
-            margin-left: auto;
+        .main-chat {
+            min-height: 50vh;
         }
         
-        ::-webkit-scrollbar {
-            width: 8px;
+        .message-content {
+            max-width: 80%;
         }
         
-        ::-webkit-scrollbar-track {
-            background: #1e1e1e;
+        .user-profile {
+            padding: 10px;
         }
         
-        ::-webkit-scrollbar-thumb {
-            background: #3b3b3b;
-            border-radius: 4px;
+        .channels {
+            padding: 10px;
+        }
+    }
+    
+    /* Полноэкранные мониторы */
+    @media (min-width: 1920px) {
+        .sidebar {
+            width: 350px;
         }
         
-        ::-webkit-scrollbar-thumb:hover {
-            background: #4b4b4b;
+        .user-name {
+            font-size: 22px;
         }
-    </style>
+        
+        .chat-header {
+            font-size: 20px;
+            padding: 25px;
+        }
+        
+        .message-content {
+            font-size: 16px;
+        }
+    }
+    
+    /* Убираем скролл у body когда не нужно */
+    body {
+        overflow: hidden;
+    }
+    
+    @media (max-width: 768px) {
+        body {
+            overflow: auto;
+        }
+    }
+</style>
+ 
 </head>
 <body>
     <div class="chat-container">
