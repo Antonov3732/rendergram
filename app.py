@@ -91,15 +91,13 @@ def register():
     if len(password) < 4:
         return 'Пароль должен быть минимум 4 символа! <a href="/register">Попробовать снова</a>'
 
-    # Проверяем, существует ли пользователь
     existing_user = db.get_user_status(username)
     print(f"🔍 Результат проверки: {existing_user}")
     
-    if existing_user:  # Если True - пользователь уже есть
+    if existing_user:
         print(f"❌ Пользователь {username} уже существует")
         return 'Этот ник уже занят! <a href="/register">Попробовать другой</a>'
 
-    # Добавляем нового пользователя
     if db.add_user(username, password):
         print(f"✅ Пользователь {username} успешно создан")
         session['username'] = username
@@ -145,16 +143,21 @@ def get_avatar(username):
 # ============ API ДЛЯ СООБЩЕНИЙ ============
 @app.route('/api/messages')
 def get_messages():
-    return jsonify(db.get_general_messages(50))
+    offset = request.args.get('offset', 0, type=int)
+    limit = request.args.get('limit', 20, type=int)
+    return jsonify(db.get_general_messages(limit, offset))
 
 @app.route('/api/private/<string:user>')
 def get_private_messages(user):
     current_user = session.get('username')
     if not current_user:
         return jsonify([])
-
+    
+    offset = request.args.get('offset', 0, type=int)
+    limit = request.args.get('limit', 20, type=int)
+    
     db.mark_private_as_read(user, current_user)
-    messages = db.get_private_messages(current_user, user, 50)
+    messages = db.get_private_messages(current_user, user, limit, offset)
     return jsonify(messages)
 
 @app.route('/api/unread')
