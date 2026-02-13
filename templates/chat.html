@@ -624,17 +624,9 @@
     font-size: 12px;
 }
 
-/* Превью тем */
+/* Превью тем - теперь только базовая */
 .bg-preview.default { background: #1a1a1a; }
-.bg-preview.dark-gradient { background: linear-gradient(135deg, #1a1a1a, #0a0a0a); }
-.bg-preview.space { background: linear-gradient(135deg, #0a0a1a, #1a1a2a); }
-.bg-preview.forest { background: linear-gradient(135deg, #1a2a1a, #2a3a2a); }
-.bg-preview.ocean { background: linear-gradient(135deg, #1a1a2a, #1a2a3a); }
-.bg-preview.grid { 
-    background-image: linear-gradient(#fff 1px, transparent 1px),
-                      linear-gradient(90deg, #fff 1px, transparent 1px);
-    background-size: 20px 20px;
-    background-color: #1a1a1a;
+/* Все остальные превью (dark-gradient, space, forest, ocean, grid, dots) - УДАЛИ! */
 }
 .bg-preview.dots {
     background-image: radial-gradient(#fff 1px, transparent 1px);
@@ -815,50 +807,25 @@
         </div>
     </div>
 
-    <!-- Кнопка для открытия меню фона -->
-<button class="bg-toggle" onclick="toggleBgMenu()">🎨</button>
-
-<!-- Меню выбора фона -->
+   <!-- Меню выбора фона -->
 <div class="bg-menu" id="bgMenu">
     <div class="bg-menu-header">
         <h4>Фон чата</h4>
         <span class="close" onclick="toggleBgMenu()">&times;</span>
     </div>
     <div class="bg-menu-content">
+        <!-- Базовая тема -->
         <div class="bg-section">
-            <h5>Готовые темы</h5>
+            <h5>Стандартный фон</h5>
             <div class="bg-patterns">
-                <div class="bg-option default" onclick="setPattern('default')" title="Стандартный">
+                <div class="bg-option default" onclick="setDefaultBg()" title="Стандартный">
                     <div class="bg-preview default"></div>
                     <span>Стандарт</span>
-                </div>
-                <div class="bg-option dark-gradient" onclick="setPattern('dark-gradient')" title="Темный градиент">
-                    <div class="bg-preview dark-gradient"></div>
-                    <span>Градиент</span>
-                </div>
-                <div class="bg-option space" onclick="setPattern('space')" title="Космос">
-                    <div class="bg-preview space"></div>
-                    <span>Космос</span>
-                </div>
-                <div class="bg-option forest" onclick="setPattern('forest')" title="Лес">
-                    <div class="bg-preview forest"></div>
-                    <span>Лес</span>
-                </div>
-                <div class="bg-option ocean" onclick="setPattern('ocean')" title="Океан">
-                    <div class="bg-preview ocean"></div>
-                    <span>Океан</span>
-                </div>
-                <div class="bg-option grid" onclick="setPattern('grid')" title="Сетка">
-                    <div class="bg-preview grid"></div>
-                    <span>Сетка</span>
-                </div>
-                <div class="bg-option dots" onclick="setPattern('dots')" title="Точки">
-                    <div class="bg-preview dots"></div>
-                    <span>Точки</span>
                 </div>
             </div>
         </div>
         
+        <!-- Своя картинка -->
         <div class="bg-section">
             <h5>Своя картинка</h5>
             <div class="custom-bg">
@@ -868,7 +835,7 @@
                 </button>
                 <div class="bg-preview" id="customBgPreview"></div>
                 <div class="opacity-control">
-                    <label>Прозрачность: <span id="opacityValue">30%</span></label>
+                    <label>Непрозрачность: <span id="opacityValue">30%</span></label>
                     <input type="range" id="bgOpacity" min="0" max="100" value="30" onchange="setBgOpacity(this.value)">
                 </div>
                 <button class="save-bg-btn" onclick="uploadBgImage()">Сохранить фон</button>
@@ -877,7 +844,6 @@
         </div>
     </div>
 </div>
-    
     <script>
         // ============ ПОДКЛЮЧЕНИЕ WEBSOCKET ============
         const socket = io();
@@ -1537,6 +1503,8 @@
         console.log('Чат загружен, пользователь:', username);
         // ============ ФУНКЦИИ ДЛЯ ФОНА ============
 
+// ============ ФУНКЦИИ ДЛЯ ФОНА ============
+
 // Загрузка сохраненного фона
 async function loadUserBackground() {
     try {
@@ -1544,12 +1512,9 @@ async function loadUserBackground() {
         const data = await response.json();
         if (data.image) {
             setBackgroundImage(data.image);
-        }
-        
-        const patternResponse = await fetch(`/api/bg-pattern/${username}`);
-        const patternData = await patternResponse.json();
-        if (patternData.pattern) {
-            setPatternClass(patternData.pattern);
+        } else {
+            // Если нет картинки, ставим стандартный фон
+            setDefaultBg();
         }
     } catch (error) {
         console.error('Ошибка загрузки фона:', error);
@@ -1561,40 +1526,43 @@ function toggleBgMenu() {
     document.getElementById('bgMenu').classList.toggle('show');
 }
 
-// Установка темы
-async function setPattern(pattern) {
-    setPatternClass(pattern);
+// Установка стандартного фона
+async function setDefaultBg() {
+    const messagesDiv = document.getElementById('chatMessages');
     
-    // Убираем картинку если была
-    document.getElementById('chatMessages').classList.remove('has-bg-image');
+    // Убираем класс с картинкой
+    messagesDiv.classList.remove('has-bg-image');
+    messagesDiv.style.removeProperty('--user-bg');
+    
+    // Сбрасываем классы
+    messagesDiv.className = 'messages';
+    messagesDiv.classList.add('default');
+    
+    // Подсвечиваем стандартную тему
+    document.querySelectorAll('.bg-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
+    document.querySelector('.bg-option.default')?.classList.add('selected');
     
     try {
-        const response = await fetch('/api/bg-pattern', {
+        // Удаляем картинку из БД
+        await fetch('/api/bg-image', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ pattern: pattern })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ image: null })
         });
         
-        const data = await response.json();
-        if (data.success) {
-            console.log('✅ Тема сохранена');
-            // Подсветка выбранной темы
-            document.querySelectorAll('.bg-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            event.currentTarget.classList.add('selected');
-        }
+        // Сохраняем паттерн как default
+        await fetch('/api/bg-pattern', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pattern: 'default' })
+        });
+        
+        console.log('✅ Установлен стандартный фон');
     } catch (error) {
-        console.error('❌ Ошибка сохранения темы:', error);
+        console.error('❌ Ошибка сохранения:', error);
     }
-}
-
-function setPatternClass(pattern) {
-    const messagesDiv = document.getElementById('chatMessages');
-    messagesDiv.className = 'messages'; // сбрасываем
-    messagesDiv.classList.add(pattern);
 }
 
 // Установка картинки
@@ -1602,6 +1570,10 @@ function setBackgroundImage(imageBase64) {
     const messagesDiv = document.getElementById('chatMessages');
     messagesDiv.style.setProperty('--user-bg', `url("${imageBase64}")`);
     messagesDiv.classList.add('has-bg-image');
+    // Убираем выделение со стандартной темы
+    document.querySelectorAll('.bg-option').forEach(opt => {
+        opt.classList.remove('selected');
+    });
 }
 
 // Предпросмотр выбранного изображения
@@ -1636,9 +1608,7 @@ async function uploadBgImage() {
     try {
         const response = await fetch('/api/bg-image', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ image: base64 })
         });
         
@@ -1646,21 +1616,20 @@ async function uploadBgImage() {
         
         if (data.success) {
             setBackgroundImage(base64);
-            // Убираем выделение с тем
-            document.querySelectorAll('.bg-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
             toggleBgMenu();
+            alert('✅ Фон успешно загружен!');
         }
     } catch (error) {
-        alert('Ошибка загрузки фона');
+        alert('❌ Ошибка загрузки фона');
     }
 }
 
-// Регулировка прозрачности
+// Регулировка прозрачности (исправлено!)
 function setBgOpacity(value) {
+    // 0% = полностью прозрачно (не видно), 100% = полностью непрозрачно (видно полностью)
+    const opacity = value / 100;
     document.getElementById('opacityValue').textContent = value + '%';
-    document.getElementById('chatMessages').style.setProperty('--bg-opacity', value / 100);
+    document.getElementById('chatMessages').style.setProperty('--bg-opacity', opacity);
 }
 
 // Удаление фона
@@ -1669,18 +1638,14 @@ async function removeBg() {
         try {
             const response = await fetch('/api/bg-image', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ image: null })
             });
             
             const data = await response.json();
             
             if (data.success) {
-                const messagesDiv = document.getElementById('chatMessages');
-                messagesDiv.classList.remove('has-bg-image');
-                messagesDiv.style.removeProperty('--user-bg');
+                setDefaultBg(); // Возвращаем стандартный фон
                 document.getElementById('customBgPreview').style.backgroundImage = '';
                 toggleBgMenu();
             }
