@@ -2,12 +2,11 @@ from flask import Flask, render_template, request, session, redirect, url_for, j
 from flask_socketio import SocketIO, emit
 import gevent
 from gevent import monkey
+monkey.patch_all()
 import os
 from datetime import datetime
 import json
 import database as db
-
-monkey.patch_all()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'eptagram_secret_key_2024'
