@@ -700,14 +700,19 @@
 }
 
 /* Фон сообщений с картинкой */
-.messages.has-bg-image {
+.messages {
     position: relative;
-    background: #1a1a1a;  /* этот фон только когда есть картинка */
+    background: #000000;  /* черный фон по умолчанию */
+    min-height: 100%;     /* занимает всю высоту */
+}
+
+.messages.has-bg-image {
+    background: transparent;  /* прозрачный фон для картинки */
 }
 
 .messages.has-bg-image::before {
     content: '';
-    position: absolute;
+    position: fixed;  /* МЕНЯЕМ absolute НА fixed */
     top: 0;
     left: 0;
     right: 0;
@@ -715,14 +720,18 @@
     background-image: var(--user-bg);
     background-size: cover;
     background-position: center;
+    background-attachment: fixed;  /* добавляем */
     opacity: var(--bg-opacity, 0.3);
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;  /* МЕНЯЕМ на -1 */
+    width: 100vw;
+    height: 100vh;
 }
 
+/* Убираем старый z-index у сообщений */
 .messages > * {
     position: relative;
-    z-index: 1;
+    /* z-index: 1; удаляем эту строку */
 }
     </style>
 </head>
